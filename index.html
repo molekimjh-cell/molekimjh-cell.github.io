@@ -285,7 +285,7 @@ const PAGES = [
   {id:'publication', label:'Publication'},
   {id:'ip', label:'Intellectual Property'},
   {id:'presentation', label:'Presentation'},
-  {id:'notice', label:'Notice'},
+  {id:'notice', label:'Board'},
 ];
 let isAdmin = false;
 let currentAdmin = null; // {id, name, email}
@@ -4676,6 +4676,7 @@ let DB = {
   patents: [],
   presentations: [],
   notices: [],
+  homeNotices: [],
   admins: [],
 };
 
@@ -4732,6 +4733,7 @@ async function loadAll(){
   DB.patents = await loadKey('bmiel-patents', []);
   DB.presentations = await loadKey('bmiel-presentations', []);
   DB.notices = await loadKey('bmiel-notices', []);
+  DB.homeNotices = await loadKey('bmiel-home-notices', []);
   DB.admins = await loadKey('bmiel-admin-accounts', []);
 }
 
@@ -5005,8 +5007,63 @@ function renderHome(){
         </div>
       `).join('')}
     </div>
+
+    <div class="row-with-add" style="margin-top:36px;">
+      <div class="subhead" style="margin:0;">Notice</div>
+      ${isAdmin? `<button class="add-btn" onclick="openHomeNoticeForm()">+ Add notice</button>`:''}
+    </div>
+    ${(()=>{ const sorted=[...DB.homeNotices].sort((a,b)=>(b.date||'').localeCompare(a.date||'')); return sorted.length===0? `<div class="empty-note">No notices yet.</div>` : sorted.map(n=>`
+      <div class="notice-item">
+        <div class="notice-date">${fmtDot(n.date)}</div>
+        <div class="notice-text">${esc(n.text)}</div>
+        ${n.usePhoto && n.photo? `<div class="notice-photo-wrap"><img class="notice-photo" src="${n.photo}"></div>`:''}
+        ${isAdmin? `<div class="edit-controls" style="position:static;margin-top:8px;">
+          <button onclick="openHomeNoticeForm('${n.id}')">Edit</button>
+          <button class="del" onclick="deleteHomeNotice('${n.id}')">Delete</button>
+        </div>`:''}
+      </div>
+    `).join(''); })()}
   `;
   startHeroTimer(journals.length);
+}
+function openHomeNoticeForm(id){
+  const existing = id? DB.homeNotices.find(n=>n.id===id): null;
+  const f = existing || {};
+  let tempPhoto = f.photo || null;
+  showModal(existing?'Edit Notice':'Add Notice', `
+    <div class="field"><label>Date</label><input type="date" id="hnDate" value="${f.date||''}"></div>
+    <div class="field"><label>Notice Text</label><textarea id="hnText">${esc(f.text||'')}</textarea></div>
+    <div class="check-row"><input type="checkbox" id="hnUsePhoto" ${f.usePhoto?'checked':''} onchange="document.getElementById('hnPhotoField').style.display=this.checked?'block':'none'"> <label for="hnUsePhoto" style="margin:0;text-transform:none;font-weight:400;">Include a photo</label></div>
+    <div class="field" id="hnPhotoField" style="display:${f.usePhoto?'block':'none'};margin-top:10px;">
+      <label>Photo</label><input type="file" id="hnPhoto" accept="image/*">
+      ${tempPhoto? `<img class="file-preview" id="hnPreview" src="${tempPhoto}">`:`<img class="file-preview" id="hnPreview" style="display:none;">`}
+    </div>
+  `, async ()=>{
+    const date = document.getElementById('hnDate').value;
+    const text = document.getElementById('hnText').value.trim();
+    if(!date||!text){ alert('Please enter both date and notice text.'); return; }
+    const usePhoto = document.getElementById('hnUsePhoto').checked;
+    const newPhoto = usePhoto? await readFileAsDataURL(document.getElementById('hnPhoto')) : null;
+    const data = { date, text, usePhoto, photo: usePhoto? (newPhoto||tempPhoto) : null };
+    if(existing){ Object.assign(existing, data); }
+    else{ DB.homeNotices.push({id:uid(), ...data, addedAt:Date.now()}); }
+    await saveKey('bmiel-home-notices', DB.homeNotices);
+    closeModal(); renderHome();
+  });
+  const photoInput = document.getElementById('hnPhoto');
+  if(photoInput){
+    photoInput.addEventListener('change', async e=>{
+      const d = await readFileAsDataURL(e.target);
+      if(d){ const p=document.getElementById('hnPreview'); p.src=d; p.style.display='block'; }
+    });
+  }
+}
+async function deleteHomeNotice(id){
+  showConfirm('Delete this notice?', async ()=>{
+    DB.homeNotices = DB.homeNotices.filter(n=>n.id!==id);
+    await saveKey('bmiel-home-notices', DB.homeNotices);
+    renderHome();
+  });
 }
 function startHeroTimer(count){
   if(heroTimer) clearInterval(heroTimer);
@@ -5189,6 +5246,18 @@ function pubSortValue(p){
 function memberConfSortValue(c){
   return c.sortDate || '';
 }
+function getMemberPubLinks(m){
+  // New format: m.pubLinks = [{pubId, role}]. Old format (pre-role feature): m.publicationIds = ['id', ...].
+  if(m.pubLinks) return m.pubLinks;
+  if(m.publicationIds) return m.publicationIds.map(id=>({pubId:id, role:''}));
+  return [];
+}
+function memberRoleLabel(role){
+  if(role==='first') return '1st Author';
+  if(role==='co') return 'Co-author';
+  if(role==='corr') return 'Corresponding Author';
+  return '';
+}
 function renderMember(){
   const el = document.getElementById('page-member');
   const currentSorted = [...DB.membersCurrent].sort((a,b)=>enrollKey(a)-enrollKey(b));
@@ -5202,10 +5271,10 @@ function renderMember(){
     </div>
     <div class="member-grid">
       ${currentSorted.length===0? `<div class="empty-note">No current members listed.</div>` : currentSorted.map(m=>{
-        const linkedPubs = (m.publicationIds||[])
-          .map(pid=>DB.publications.find(p=>p.id===pid))
-          .filter(Boolean)
-          .sort((a,b)=> pubSortValue(b).localeCompare(pubSortValue(a)));
+        const linkedPubs = getMemberPubLinks(m)
+          .map(link=>({...link, pub:DB.publications.find(p=>p.id===link.pubId)}))
+          .filter(link=>link.pub)
+          .sort((a,b)=> pubSortValue(b.pub).localeCompare(pubSortValue(a.pub)));
         const confs = [...(m.conferences||[])].sort((a,b)=> memberConfSortValue(b).localeCompare(memberConfSortValue(a)));
         return `
         <div class="member-card">
@@ -5216,19 +5285,20 @@ function renderMember(){
             <div><span class="lbl">Research area</span> ${esc(m.researchArea)}</div>
 
             <div style="margin-top:12px;"><span class="lbl">Publication</span></div>
-            ${linkedPubs.length===0? `<div class="small-note" style="margin:2px 0 4px;">None linked yet.</div>` : linkedPubs.map(p=>`
+            ${linkedPubs.length===0? `<div class="small-note" style="margin:2px 0 4px;">None linked yet.</div>` : linkedPubs.map(link=>{ const p=link.pub; return `
               <div style="font-size:12.5px;margin:5px 0;padding-bottom:5px;border-bottom:1px dotted var(--line);">
-                <span style="font-weight:600;">${pubTitleHtml(p)}</span><br>
+                <span style="font-weight:600;">${link.role?`(${esc(memberRoleLabel(link.role))}) `:''}${pubTitleHtml(p)}</span><br>
                 <span class="jt-italic">${esc(p.journal)}</span>, <span class="jt-bold">${p.year}</span>${p.pubDate?', '+esc(p.pubDate):''}
                 ${isAdmin? ` <button style="border:none;background:none;color:var(--red);font-size:11px;text-decoration:underline;" onclick="removeMemberPublication('${m.id}','${p.id}')">remove</button>`:''}
               </div>
-            `).join('')}
+            `;}).join('')}
             ${isAdmin? `<button class="add-btn" style="margin:4px 0 2px;background:none;color:var(--navy);border:1px solid var(--line);font-size:12px;padding:5px 10px;" onclick="openMemberPubPicker('${m.id}')">+ Link publication</button>`:''}
 
             <div style="margin-top:14px;"><span class="lbl">Conference &amp; Symposium</span></div>
             ${confs.length===0? `<div class="small-note" style="margin:2px 0 4px;">None yet.</div>` : confs.map(c=>`
               <div style="font-size:12.5px;margin:5px 0;padding-bottom:5px;border-bottom:1px dotted var(--line);">
-                (${esc(c.mode)}, ${esc(c.lang)}) ${esc(c.title)}, ${esc(c.confName)}, ${esc(c.city)}, ${esc(c.country)}, ${esc(c.period)}.
+                (${esc(c.mode)}, ${esc(c.lang)}) ${esc(c.title)}, ${esc(c.confName)}, ${esc(c.city)}, ${esc(c.country)}, ${esc(c.period)}${c.presentDate?` (Presented: ${esc(fmtDot(c.presentDate))})`:''}.
+                ${c.hasAward && c.awardName? `<br><b>${esc(c.awardName)}</b>`:''}
                 ${isAdmin? `<br><button style="border:none;background:none;color:var(--muted);font-size:11px;text-decoration:underline;" onclick="openMemberConferenceForm('${m.id}','${c.id}')">edit</button> <button style="border:none;background:none;color:var(--red);font-size:11px;text-decoration:underline;" onclick="deleteMemberConference('${m.id}','${c.id}')">delete</button>`:''}
               </div>
             `).join('')}
@@ -5302,7 +5372,7 @@ function openCurrentMemberForm(id){
       photo: newPhoto || tempPhoto || null,
     };
     if(existing){ Object.assign(existing, data); }
-    else{ DB.membersCurrent.unshift({id:uid(), ...data, publicationIds:[], conferences:[], addedAt:Date.now()}); }
+    else{ DB.membersCurrent.unshift({id:uid(), ...data, pubLinks:[], conferences:[], addedAt:Date.now()}); }
     await saveKey('bmiel-members-current', DB.membersCurrent);
     closeModal(); renderMember();
   });
@@ -5314,24 +5384,35 @@ function openCurrentMemberForm(id){
 function openMemberPubPicker(memberId){
   const member = DB.membersCurrent.find(m=>m.id===memberId);
   if(!member) return;
-  if(!member.publicationIds) member.publicationIds = [];
+  const existingLinks = getMemberPubLinks(member);
   const allPubsSorted = [...DB.publications].sort((a,b)=> pubSortValue(b).localeCompare(pubSortValue(a)));
   if(allPubsSorted.length===0){
     showModal('Link Publication', `<p class="small-note">No publications exist yet. Add publications first from the Publication menu, then come back here to link them.</p>`, ()=>closeModal(), 'Close');
     return;
   }
   showModal('Link Publication(s)', `
+    <p class="small-note">Check a publication to link it, then choose this member's role on that paper.</p>
     <div class="field" style="max-height:340px;overflow-y:auto;">
-      ${allPubsSorted.map(p=>`
-        <div class="check-row" style="margin-bottom:8px;align-items:flex-start;">
-          <input type="checkbox" class="pub-pick" value="${p.id}" ${member.publicationIds.includes(p.id)?'checked':''}>
+      ${allPubsSorted.map(p=>{
+        const link = existingLinks.find(l=>l.pubId===p.id);
+        return `
+        <div class="check-row" style="margin-bottom:8px;align-items:flex-start;flex-wrap:wrap;">
+          <input type="checkbox" class="pub-pick" value="${p.id}" ${link?'checked':''} onchange="document.getElementById('pub-role-${p.id}').style.display=this.checked?'inline-block':'none'">
           <label style="margin:0;text-transform:none;font-weight:400;font-size:13px;">${esc(p.title)} — <span class="jt-italic">${esc(p.journal)}</span>, ${p.year}${p.pubDate?', '+esc(p.pubDate):''}</label>
+          <select id="pub-role-${p.id}" class="pub-role-select" data-pubid="${p.id}" style="margin-left:26px;display:${link?'inline-block':'none'};">
+            <option value="first" ${link&&link.role==='first'?'selected':''}>1st Author</option>
+            <option value="co" ${!link||link.role==='co'?'selected':''}>Co-author</option>
+            <option value="corr" ${link&&link.role==='corr'?'selected':''}>Corresponding Author</option>
+          </select>
         </div>
-      `).join('')}
+      `;}).join('')}
     </div>
   `, async ()=>{
-    const checked = Array.from(document.querySelectorAll('.pub-pick:checked')).map(c=>c.value);
-    member.publicationIds = checked;
+    const checked = Array.from(document.querySelectorAll('.pub-pick:checked'));
+    member.pubLinks = checked.map(c=>({
+      pubId: c.value,
+      role: document.getElementById('pub-role-'+c.value).value,
+    }));
     await saveKey('bmiel-members-current', DB.membersCurrent);
     closeModal(); renderMember();
   }, 'Save links');
@@ -5339,7 +5420,7 @@ function openMemberPubPicker(memberId){
 async function removeMemberPublication(memberId, pubId){
   const member = DB.membersCurrent.find(m=>m.id===memberId);
   if(!member) return;
-  member.publicationIds = (member.publicationIds||[]).filter(id=>id!==pubId);
+  member.pubLinks = getMemberPubLinks(member).filter(l=>l.pubId!==pubId);
   await saveKey('bmiel-members-current', DB.membersCurrent);
   renderMember();
 }
@@ -5367,10 +5448,15 @@ function openMemberConferenceForm(memberId, confId){
       <div class="field"><label>Country</label><input type="text" id="mcCountry" value="${esc(f.country||'')}"></div>
     </div>
     <div class="field"><label>Period (as displayed)</label><input type="text" id="mcPeriod" value="${esc(f.period||'')}" placeholder="Apr. 02-04, 2025"></div>
-    <div class="field"><label>Start Date (for sorting only)</label><input type="date" id="mcSortDate" value="${f.sortDate||''}"></div>
+    <div class="field"><label>Actual Presentation Date</label><input type="date" id="mcPresentDate" value="${f.presentDate||f.sortDate||''}"></div>
+    <div class="check-row"><input type="checkbox" id="mcHasAward" ${f.hasAward?'checked':''} onchange="document.getElementById('mcAwardField').style.display=this.checked?'block':'none'"> <label for="mcHasAward" style="margin:0;text-transform:none;font-weight:400;">Received an award for this presentation</label></div>
+    <div class="field" id="mcAwardField" style="display:${f.hasAward?'block':'none'};margin-top:10px;">
+      <label>Award Name</label><input type="text" id="mcAwardName" value="${esc(f.awardName||'')}" placeholder="e.g. Best Poster Award">
+    </div>
   `, async ()=>{
     const title = document.getElementById('mcTitle').value.trim();
     if(!title){ alert('Please enter a title.'); return; }
+    const hasAward = document.getElementById('mcHasAward').checked;
     const data = {
       mode: document.getElementById('mcMode').value,
       lang: document.getElementById('mcLang').value,
@@ -5379,7 +5465,10 @@ function openMemberConferenceForm(memberId, confId){
       city: document.getElementById('mcCity').value.trim(),
       country: document.getElementById('mcCountry').value.trim(),
       period: document.getElementById('mcPeriod').value.trim(),
-      sortDate: document.getElementById('mcSortDate').value,
+      presentDate: document.getElementById('mcPresentDate').value,
+      sortDate: document.getElementById('mcPresentDate').value,
+      hasAward,
+      awardName: hasAward? document.getElementById('mcAwardName').value.trim() : '',
     };
     if(existing){ Object.assign(existing, data); }
     else{ member.conferences.unshift({id:uid(), ...data, addedAt:Date.now()}); }
@@ -6062,7 +6151,7 @@ function renderNotice(){
   const sorted = [...DB.notices].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   el.innerHTML = `
     <div class="section-title">Announcements</div>
-    <div class="row-with-add"><h1 class="page-title" style="border:none;margin:0;padding:0;">Notice</h1>
+    <div class="row-with-add"><h1 class="page-title" style="border:none;margin:0;padding:0;">Board</h1>
       ${isAdmin? `<button class="add-btn" onclick="openNoticeForm()">+ Add notice</button>`:''}
     </div>
     <div style="border-bottom:2px solid var(--navy);margin-bottom:10px;"></div>
@@ -6137,7 +6226,7 @@ async function mergeSeedDataIntoDB(){
   DB.profEducation = [...s.profEducation.map(x=>({id:uid(),...x,addedAt:Date.now()})), ...DB.profEducation];
   DB.profAwards = [...s.profAwards.map(x=>({id:uid(),...x,addedAt:Date.now()})), ...DB.profAwards];
   DB.profActivity = [...s.profActivity.map(x=>({id:uid(),...x,addedAt:Date.now()})), ...DB.profActivity];
-  DB.membersCurrent = [...s.membersCurrent.map(x=>({id:uid(),...x,publicationIds:[],conferences:[],addedAt:Date.now()})), ...DB.membersCurrent];
+  DB.membersCurrent = [...s.membersCurrent.map(x=>({id:uid(),...x,pubLinks:[],conferences:[],addedAt:Date.now()})), ...DB.membersCurrent];
   DB.membersAlumni = [...s.membersAlumni.map(x=>({id:uid(),...x,addedAt:Date.now()})), ...DB.membersAlumni];
   DB.research = [...s.research.map(x=>({id:uid(),...x,addedAt:Date.now()})), ...DB.research];
   DB.publications = [...DB.publications, ...s.publications.map((x,i)=>({id:uid(),...x,addedAt:Date.now()+i}))];
@@ -6145,10 +6234,19 @@ async function mergeSeedDataIntoDB(){
   DB.presentations = [...DB.presentations, ...s.presentations.map((x,i)=>({id:uid(),...x,addedAt:Date.now()+i}))];
   DB.notices = [...DB.notices, ...s.notices.map((x,i)=>({id:uid(),...x,addedAt:Date.now()+i}))];
 
-  // auto-link each current member's own publications by matching author name
+  // auto-link each current member's own publications by matching author name,
+  // and infer their role on that paper from the publication's own author-list role
   DB.membersCurrent.forEach(m=>{
     const linked = DB.publications.filter(p=>p.authors.some(a=>a.name.trim().toLowerCase()===m.name.trim().toLowerCase()));
-    m.publicationIds = linked.map(p=>p.id);
+    m.pubLinks = linked.map(p=>{
+      const authorMatch = p.authors.find(a=>a.name.trim().toLowerCase()===m.name.trim().toLowerCase());
+      let role = 'co';
+      if(authorMatch){
+        if(authorMatch.role==='first') role = 'first';
+        else if(authorMatch.role==='corr') role = 'corr';
+      }
+      return {pubId:p.id, role};
+    });
   });
 
   await saveKey('bmiel-prof-photo', DB.profPhoto, {silent:true});
