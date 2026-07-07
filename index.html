@@ -4753,6 +4753,7 @@ async function loadAll(){
   DB.notices = await loadKey('bmiel-notices', []);
   DB.homeNotices = await loadKey('bmiel-home-notices', []);
   DB.admins = await loadKey('bmiel-admin-accounts', []);
+  await preloadImages();
 }
 
 /* ================= NAV / ROUTING ================= */
@@ -4789,7 +4790,7 @@ function renderLoginArea(){
 }
 function renderLogo(){
   const logoEl = document.getElementById('brandLogo');
-  logoEl.innerHTML = DB.logo ? `<img src="${DB.logo}" alt="BMIEL logo">` : 'BMIEL';
+  logoEl.innerHTML = DB.logo ? `<img src="${imgSrc(DB.logo)}" alt="BMIEL logo">` : 'BMIEL';
   logoEl.classList.toggle('has-image', !!DB.logo);
   const editArea = document.getElementById('logoEditArea');
   editArea.innerHTML = isAdmin ? `<button class="logo-edit-btn" onclick="openLogoForm()">Change logo</button>` : '';
@@ -4798,12 +4799,12 @@ function openLogoForm(){
   let tempLogo = DB.logo || null;
   showModal('Update Site Logo', `
     <div class="field"><label>Logo image</label><input type="file" id="logoFile" accept="image/*">
-      ${tempLogo? `<img class="file-preview" id="logoPreview" src="${tempLogo}">`:`<img class="file-preview" id="logoPreview" style="display:none;">`}
+      ${tempLogo? `<img class="file-preview" id="logoPreview" src="${imgSrc(tempLogo)}">`:`<img class="file-preview" id="logoPreview" style="display:none;">`}
     </div>
     <p class="small-note">This replaces the circular BMIEL logo shown in the top-left header. Recommended: a square image for the best fit.</p>
     ${tempLogo? `<button type="button" class="btn-secondary" onclick="resetLogoToDefault()">Reset to text logo</button>`:''}
   `, async ()=>{
-    const newImg = await readFileAsDataURL(document.getElementById('logoFile'));
+    const newImg = await uploadImageAndGetURL(document.getElementById('logoFile'), 'logo');
     if(newImg){
       DB.logo = newImg;
       await saveKey('bmiel-logo', DB.logo);
@@ -4962,13 +4963,142 @@ function showConfirm(message, onYes, label, color){
   document.getElementById('confirmYesBtn').onclick = ()=>{ closeModal(); onYes(); };
   document.getElementById('modalBackdrop').classList.add('show');
 }
+/* ================= IMAGE STORAGE (Firestore, free tier — no Storage/Blaze needed) =================
+   Every image is compressed, then saved as its OWN small Firestore document in the
+   'bmiel_images' collection (one image per document, safely under the 1MB-per-document
+   limit). Only a short reference id (e.g. "img_ab12cd") is stored on the actual
+   record (member, publication, journal, etc.) — never the image data itself — so
+   those main records stay tiny no matter how many images accumulate over time.
+   imageCache holds already-fetched images in memory so templates can render
+   synchronously via imgSrc(ref). */
+const imageCache = new Map();
+function blobToDataURL(blob){
+  return new Promise((resolve,reject)=>{
+    const r = new FileReader();
+    r.onload = ()=>resolve(r.result);
+    r.onerror = ()=>reject(r.error);
+    r.readAsDataURL(blob);
+  });
+}
+function imgSrc(ref){
+  if(!ref) return '';
+  if(typeof ref==='string' && ref.startsWith('img_')) return imageCache.get(ref) || '';
+  return ref; // backward-compatible: old entries may hold a full data URL or an http(s) URL directly
+}
+function collectImageRefs(){
+  const refs = new Set();
+  const add = v=>{ if(typeof v==='string' && v.startsWith('img_')) refs.add(v); };
+  add(DB.logo); add(DB.profPhoto);
+  (DB.journals||[]).forEach(x=>add(x.image));
+  (DB.notices||[]).forEach(x=>add(x.photo));
+  (DB.homeNotices||[]).forEach(x=>add(x.photo));
+  (DB.membersCurrent||[]).forEach(x=>add(x.photo));
+  (DB.research||[]).forEach(x=>add(x.image));
+  (DB.publications||[]).forEach(x=>add(x.image));
+  return Array.from(refs);
+}
+async function preloadImages(){
+  const ids = collectImageRefs().filter(id=>!imageCache.has(id));
+  if(ids.length===0) return;
+  const CHUNK = 30; // Firestore 'in' query limit
+  for(let i=0;i<ids.length;i+=CHUNK){
+    const chunk = ids.slice(i, i+CHUNK);
+    try{
+      const snap = await fsDb.collection('bmiel_images').where(firebase.firestore.FieldPath.documentId(), 'in', chunk).get();
+      snap.forEach(doc=> imageCache.set(doc.id, doc.data().data));
+    }catch(e){ console.error('image preload failed', e); }
+  }
+}
+function loadImageElementFromFile(file){
+  return new Promise((resolve,reject)=>{
+    const r = new FileReader();
+    r.onload = ()=>{
+      const img = new Image();
+      img.onload = ()=>resolve(img);
+      img.onerror = ()=>reject(new Error('Could not read this image file.'));
+      img.src = r.result;
+    };
+    r.onerror = ()=>reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+function resizeImageToBlob(img, maxDim, quality){
+  let {width, height} = img;
+  if(width > maxDim || height > maxDim){
+    if(width >= height){ height = Math.round(height * (maxDim/width)); width = maxDim; }
+    else{ width = Math.round(width * (maxDim/height)); height = maxDim; }
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = width; canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, width, height);
+  return new Promise(resolve=> canvas.toBlob(b=>resolve(b), 'image/jpeg', quality));
+}
+async function uploadImageAndGetURL(input){
+  if(!input.files || !input.files[0]) return null;
+  const f = input.files[0];
+  if(f.size > 15*1024*1024){ alert('Image too large — please use an image under 15MB.'); return null; }
+  try{
+    const img = await loadImageElementFromFile(f);
+    let blob = await resizeImageToBlob(img, 1000, 0.72);
+    let dataUrl = await blobToDataURL(blob);
+    if(dataUrl.length > 900*1024){
+      blob = await resizeImageToBlob(img, 800, 0.5);
+      dataUrl = await blobToDataURL(blob);
+    }
+    if(dataUrl.length > 900*1024){
+      alert('This image is still too large after compression — please try a smaller or simpler image.');
+      return null;
+    }
+    const imageId = 'img_' + uid();
+    await fsDb.collection('bmiel_images').doc(imageId).set({ data: dataUrl });
+    imageCache.set(imageId, dataUrl); // available immediately, no reload needed
+    return imageId;
+  }catch(e){
+    console.error('image upload failed', e);
+    alert('Image upload failed — please check your internet connection and try again.');
+    return null;
+  }
+}
+
 function readFileAsDataURL(input){
+  // Images are resized/compressed before storing because Firestore documents
+  // have a hard 1MB size limit, and this app stores each data key (which can
+  // hold several images, e.g. journals or notices) as a single document.
   return new Promise((resolve,reject)=>{
     if(!input.files || !input.files[0]){ resolve(null); return; }
     const f = input.files[0];
-    if(f.size > 4*1024*1024){ alert('Image too large — please use an image under 4MB.'); resolve(null); return; }
+    if(f.size > 15*1024*1024){ alert('Image too large — please use an image under 15MB.'); resolve(null); return; }
     const r = new FileReader();
-    r.onload = ()=>resolve(r.result);
+    r.onload = ()=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const MAX_DIM = 1000; // longest side, in pixels
+        let {width, height} = img;
+        if(width > MAX_DIM || height > MAX_DIM){
+          if(width >= height){ height = Math.round(height * (MAX_DIM/width)); width = MAX_DIM; }
+          else{ width = Math.round(width * (MAX_DIM/height)); height = MAX_DIM; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        // JPEG compression keeps file size small; falls back to the original if compression fails
+        let dataUrl;
+        try{ dataUrl = canvas.toDataURL('image/jpeg', 0.72); }catch(e){ dataUrl = r.result; }
+        if(!dataUrl || dataUrl.length > 900*1024){
+          // still too big after compression at this quality — compress harder
+          try{ dataUrl = canvas.toDataURL('image/jpeg', 0.45); }catch(e){ /* keep previous */ }
+        }
+        if(dataUrl && dataUrl.length > 900*1024){
+          alert('This image is still too large after compression — please try a smaller or simpler image.');
+          resolve(null); return;
+        }
+        resolve(dataUrl);
+      };
+      img.onerror = ()=>{ alert('Could not read this image file.'); resolve(null); };
+      img.src = r.result;
+    };
     r.onerror = ()=>reject(r.error);
     r.readAsDataURL(f);
   });
@@ -4996,7 +5126,7 @@ function renderHome(){
   }else{
     heroHtml = journals.slice(0,5).map((j,i)=>`
       <div class="hero-slide ${i===0?'show':''}" data-i="${i}">
-        ${j.image? `<img src="${j.image}" alt="">` : `<div class="no-img-placeholder"></div>`}
+        ${j.image? `<img src="${imgSrc(j.image)}" alt="">` : `<div class="no-img-placeholder"></div>`}
         <div class="cap">${journalCaption(j)}</div>
       </div>
     `).join('');
@@ -5016,7 +5146,7 @@ function renderHome(){
     <div class="journal-list">
       ${journals.length===0? `<div class="empty-note">No entries yet.</div>` : journals.map(j=>`
         <div class="journal-item">
-          ${j.image? `<img src="${j.image}">`:`<div style="width:64px;height:64px;background:var(--line);border-radius:3px;"></div>`}
+          ${j.image? `<img src="${imgSrc(j.image)}">`:`<div style="width:64px;height:64px;background:var(--line);border-radius:3px;"></div>`}
           <div class="jt">${journalCaption(j)}</div>
           ${isAdmin? `<div class="jr-controls">
             <button class="add-btn" style="background:none;color:var(--muted);border:1px solid var(--line);" onclick="openJournalForm('${j.id}')">Edit</button>
@@ -5034,7 +5164,7 @@ function renderHome(){
       <div class="notice-item">
         <div class="notice-date">${fmtDot(n.date)}</div>
         <div class="notice-text">${esc(n.text)}</div>
-        ${n.usePhoto && n.photo? `<div class="notice-photo-wrap"><img class="notice-photo" src="${n.photo}"></div>`:''}
+        ${n.usePhoto && n.photo? `<div class="notice-photo-wrap"><img class="notice-photo" src="${imgSrc(n.photo)}"></div>`:''}
         ${isAdmin? `<div class="edit-controls" style="position:static;margin-top:8px;">
           <button onclick="openHomeNoticeForm('${n.id}')">Edit</button>
           <button class="del" onclick="deleteHomeNotice('${n.id}')">Delete</button>
@@ -5054,14 +5184,14 @@ function openHomeNoticeForm(id){
     <div class="check-row"><input type="checkbox" id="hnUsePhoto" ${f.usePhoto?'checked':''} onchange="document.getElementById('hnPhotoField').style.display=this.checked?'block':'none'"> <label for="hnUsePhoto" style="margin:0;text-transform:none;font-weight:400;">Include a photo</label></div>
     <div class="field" id="hnPhotoField" style="display:${f.usePhoto?'block':'none'};margin-top:10px;">
       <label>Photo</label><input type="file" id="hnPhoto" accept="image/*">
-      ${tempPhoto? `<img class="file-preview" id="hnPreview" src="${tempPhoto}">`:`<img class="file-preview" id="hnPreview" style="display:none;">`}
+      ${tempPhoto? `<img class="file-preview" id="hnPreview" src="${imgSrc(tempPhoto)}">`:`<img class="file-preview" id="hnPreview" style="display:none;">`}
     </div>
   `, async ()=>{
     const date = document.getElementById('hnDate').value;
     const text = document.getElementById('hnText').value.trim();
     if(!date||!text){ alert('Please enter both date and notice text.'); return; }
     const usePhoto = document.getElementById('hnUsePhoto').checked;
-    const newPhoto = usePhoto? await readFileAsDataURL(document.getElementById('hnPhoto')) : null;
+    const newPhoto = usePhoto? await uploadImageAndGetURL(document.getElementById('hnPhoto'), 'home-notice') : null;
     const data = { date, text, usePhoto, photo: usePhoto? (newPhoto||tempPhoto) : null };
     if(existing){ Object.assign(existing, data); }
     else{ DB.homeNotices.push({id:uid(), ...data, addedAt:Date.now()}); }
@@ -5110,14 +5240,14 @@ function openJournalForm(id){
       <p class="small-note">Only the journal name, year, issue, and page of the selected publication will be shown.</p>
     </div>
     <div class="field"><label>Image</label><input type="file" id="jImage" accept="image/*">
-      ${tempImage? `<img class="file-preview" id="jPreview" src="${tempImage}">` : `<img class="file-preview" id="jPreview" style="display:none;">`}
+      ${tempImage? `<img class="file-preview" id="jPreview" src="${imgSrc(tempImage)}">` : `<img class="file-preview" id="jPreview" style="display:none;">`}
     </div>
     <p class="small-note">Up to 5 highlights are shown on the homepage carousel. The most recently added replaces the oldest if there are already 5.</p>
   `, async ()=>{
     const pubId = document.getElementById('jPubId').value;
     if(!pubId){ alert('Please select a publication.'); return; }
     const fileInput = document.getElementById('jImage');
-    const newImg = await readFileAsDataURL(fileInput);
+    const newImg = await uploadImageAndGetURL(fileInput, 'journal');
     const finalImg = newImg || tempImage;
     if(existing){
       existing.pubId = pubId; existing.image = finalImg;
@@ -5158,7 +5288,7 @@ function renderProfessor(){
     <div class="section-title">Principal Investigator</div>
     <h1 class="page-title">Professor</h1>
     <div class="prof-photo-wrap">
-      ${DB.profPhoto? `<img class="prof-photo" src="${DB.profPhoto}">` : `<div class="prof-photo-empty">No photo</div>`}
+      ${DB.profPhoto? `<img class="prof-photo" src="${imgSrc(DB.profPhoto)}">` : `<div class="prof-photo-empty">No photo</div>`}
       <div class="prof-intro">
         <h2>Jihoon Kim, Ph.D.</h2>
         <p>Principal Investigator, BioMaterials for Immuno-Engineering Lab</p>
@@ -5215,10 +5345,10 @@ function profSection(label, list, key){
 async function openProfPhotoForm(){
   showModal('Update Professor Photo', `
     <div class="field"><label>Photo</label><input type="file" id="pPhoto" accept="image/*">
-      ${DB.profPhoto? `<img class="file-preview" id="pPreview" src="${DB.profPhoto}">`:`<img class="file-preview" id="pPreview" style="display:none;">`}
+      ${DB.profPhoto? `<img class="file-preview" id="pPreview" src="${imgSrc(DB.profPhoto)}">`:`<img class="file-preview" id="pPreview" style="display:none;">`}
     </div>
   `, async ()=>{
-    const d = await readFileAsDataURL(document.getElementById('pPhoto'));
+    const d = await uploadImageAndGetURL(document.getElementById('pPhoto'), 'professor');
     if(d){ DB.profPhoto = d; await saveKey('bmiel-prof-photo', DB.profPhoto); }
     closeModal(); renderProfessor();
   });
@@ -5296,7 +5426,7 @@ function renderMember(){
         const confs = [...(m.conferences||[])].sort((a,b)=> memberConfSortValue(b).localeCompare(memberConfSortValue(a)));
         return `
         <div class="member-card">
-          ${m.photo? `<img class="member-photo" src="${m.photo}">`:`<div class="member-photo-empty">No photo</div>`}
+          ${m.photo? `<img class="member-photo" src="${imgSrc(m.photo)}">`:`<div class="member-photo-empty">No photo</div>`}
           <div class="member-info">
             <div class="deg" style="margin-bottom:2px;">${m.name?esc(m.name):''}</div>
             <div class="deg" style="font-size:13px;font-weight:600;color:var(--muted);">${esc(m.degree)}${m.enrollYear? ` <span style="color:var(--gold);font-weight:600;font-size:12.5px;">(${m.enrollYear}${m.enrollMonth?'.'+String(m.enrollMonth).padStart(2,'0'):''})</span>`:''}</div>
@@ -5363,7 +5493,7 @@ function openCurrentMemberForm(id){
   let tempPhoto = existing? existing.photo : null;
   showModal(existing?'Edit Member':'Add Current Member', `
     <div class="field"><label>Photo</label><input type="file" id="mPhoto" accept="image/*">
-      ${tempPhoto? `<img class="file-preview" id="mPreview" src="${tempPhoto}">`:`<img class="file-preview" id="mPreview" style="display:none;">`}
+      ${tempPhoto? `<img class="file-preview" id="mPreview" src="${imgSrc(tempPhoto)}">`:`<img class="file-preview" id="mPreview" style="display:none;">`}
     </div>
     <div class="field"><label>Name</label><input type="text" id="mName" value="${existing?esc(existing.name||''):''}" placeholder="e.g. Ji-Su Kim"></div>
     <div class="field"><label>Degree (e.g. Ph.D. Student, M.S. Student)</label><input type="text" id="mDegree" value="${existing?esc(existing.degree):''}"></div>
@@ -5381,7 +5511,7 @@ function openCurrentMemberForm(id){
     const name = document.getElementById('mName').value.trim();
     const degree = document.getElementById('mDegree').value.trim();
     if(!degree){ alert('Please enter a degree/position.'); return; }
-    const newPhoto = await readFileAsDataURL(document.getElementById('mPhoto'));
+    const newPhoto = await uploadImageAndGetURL(document.getElementById('mPhoto'), 'member');
     const data = {
       name, degree, email:document.getElementById('mEmail').value.trim(),
       enrollYear: +document.getElementById('mEnrollYear').value || null,
@@ -5572,7 +5702,7 @@ function renderResearch(){
       ${DB.research.length===0? `<div class="empty-note">No research topics yet.</div>` : DB.research.map(r=>`
         <div class="research-row">
           <div class="research-img-wrap">
-            ${r.image? `<img src="${r.image}">`:`<div class="research-img-empty">No image</div>`}
+            ${r.image? `<img src="${imgSrc(r.image)}">`:`<div class="research-img-empty">No image</div>`}
           </div>
           <div class="research-text">
             <h4>${esc(r.subtitle)}</h4>
@@ -5593,7 +5723,7 @@ function openResearchForm(id){
   showModal(existing?'Edit Research Topic':'Add Research Topic', `
     <div class="field"><label>Subtitle</label><input type="text" id="rSub" value="${existing?esc(existing.subtitle):''}"></div>
     <div class="field"><label>Image</label><input type="file" id="rImg" accept="image/*">
-      ${tempImg? `<img class="file-preview" id="rPreview" src="${tempImg}">`:`<img class="file-preview" id="rPreview" style="display:none;">`}
+      ${tempImg? `<img class="file-preview" id="rPreview" src="${imgSrc(tempImg)}">`:`<img class="file-preview" id="rPreview" style="display:none;">`}
       <p class="small-note">Shown on the left, taking up about 60% of the row width.</p>
     </div>
     <div class="field"><label>Description</label><textarea id="rText" style="min-height:160px;">${existing?esc(existing.text||''):''}</textarea>
@@ -5603,7 +5733,7 @@ function openResearchForm(id){
     const subtitle = document.getElementById('rSub').value.trim();
     if(!subtitle){ alert('Please enter a subtitle.'); return; }
     const text = document.getElementById('rText').value.trim();
-    const newImg = await readFileAsDataURL(document.getElementById('rImg'));
+    const newImg = await uploadImageAndGetURL(document.getElementById('rImg'), 'research');
     const image = newImg || tempImg;
     if(existing){ existing.subtitle=subtitle; existing.image=image; existing.text=text; }
     else{ DB.research.unshift({id:uid(), subtitle, image, text, addedAt:Date.now()}); }
@@ -5712,7 +5842,7 @@ function renderPubItem(p){
   return `
     <div class="pub-item">
       <div class="pub-num">${p._num}.</div>
-      ${p.image? `<div class="pub-image"><img src="${p.image}" alt=""></div>` : ''}
+      ${p.image? `<div class="pub-image"><img src="${imgSrc(p.image)}" alt=""></div>` : ''}
       <div class="pub-body">
         <p>${authorsHtml}, ${pubTitleHtml(p)}. <span class="jt-italic">${esc(p.journal)}</span>, <span class="jt-bold">${p.year}</span>, ${p.issue?`<span class="jt-italic">${esc(p.issue)}</span>, `:''}${esc(p.page)} ${p.ifValue?`(<span class="jt-blue">${p.ifYear?p.ifYear+' IF='+p.ifValue:'IF='+p.ifValue}${p.jifPercentile?', '+esc(p.jifPercentile):''}</span>)`:''} ${p.pubDate?'– '+fmtDot(p.pubDate):''}${p.onlineDate?' (Online: '+fmtDot(p.onlineDate)+')':''}.</p>
         ${p.highlighted? `<div class="pub-highlight">– Highlighted in BRIC.org</div>`:''}
@@ -5822,7 +5952,7 @@ function openPublicationForm(id, category){
     <div class="field"><label>Title</label><textarea id="pTitle">${esc(f.title||'')}</textarea></div>
     <div class="field"><label>Article Link (optional)</label><input type="text" id="pLink" value="${esc(f.link||'')}" placeholder="https://doi.org/..."></div>
     <div class="field"><label>Thumbnail Image (optional)</label><input type="file" id="pImage" accept="image/*">
-      ${tempPubImage? `<img class="file-preview" id="pImagePreview" src="${tempPubImage}">`:`<img class="file-preview" id="pImagePreview" style="display:none;">`}
+      ${tempPubImage? `<img class="file-preview" id="pImagePreview" src="${imgSrc(tempPubImage)}">`:`<img class="file-preview" id="pImagePreview" style="display:none;">`}
       <p class="small-note">Shown to the left of the citation, about 30% of the row width.</p>
       ${tempPubImage? `<button type="button" class="btn-secondary" onclick="document.getElementById('pImagePreview').src='';document.getElementById('pImagePreview').style.display='none';document.getElementById('pImage').dataset.cleared='1';">Remove image</button>`:''}
     </div>
@@ -5850,7 +5980,7 @@ function openPublicationForm(id, category){
     const journal = document.getElementById('pJournal').value.trim();
     if(!title || !journal){ alert('Please enter title and journal name.'); return; }
     const imageInput = document.getElementById('pImage');
-    const newImg = await readFileAsDataURL(imageInput);
+    const newImg = await uploadImageAndGetURL(imageInput, 'publication');
     const cleared = imageInput.dataset.cleared === '1';
     const data = {
       category: 'scie',
@@ -6177,7 +6307,7 @@ function renderNotice(){
       <div class="notice-item">
         <div class="notice-date">${fmtDot(n.date)}</div>
         <div class="notice-text">${esc(n.text)}</div>
-        ${n.usePhoto && n.photo? `<div class="notice-photo-wrap"><img class="notice-photo" src="${n.photo}"></div>`:''}
+        ${n.usePhoto && n.photo? `<div class="notice-photo-wrap"><img class="notice-photo" src="${imgSrc(n.photo)}"></div>`:''}
         ${isAdmin? `<div class="edit-controls" style="position:static;margin-top:8px;">
           <button onclick="openNoticeForm('${n.id}')">Edit</button>
           <button class="del" onclick="deleteNotice('${n.id}')">Delete</button>
@@ -6196,14 +6326,14 @@ function openNoticeForm(id){
     <div class="check-row"><input type="checkbox" id="nUsePhoto" ${f.usePhoto?'checked':''} onchange="document.getElementById('nPhotoField').style.display=this.checked?'block':'none'"> <label for="nUsePhoto" style="margin:0;text-transform:none;font-weight:400;">Include a photo</label></div>
     <div class="field" id="nPhotoField" style="display:${f.usePhoto?'block':'none'};margin-top:10px;">
       <label>Photo</label><input type="file" id="nPhoto" accept="image/*">
-      ${tempPhoto? `<img class="file-preview" id="nPreview" src="${tempPhoto}">`:`<img class="file-preview" id="nPreview" style="display:none;">`}
+      ${tempPhoto? `<img class="file-preview" id="nPreview" src="${imgSrc(tempPhoto)}">`:`<img class="file-preview" id="nPreview" style="display:none;">`}
     </div>
   `, async ()=>{
     const date = document.getElementById('nDate').value;
     const text = document.getElementById('nText').value.trim();
     if(!date||!text){ alert('Please enter both date and notice text.'); return; }
     const usePhoto = document.getElementById('nUsePhoto').checked;
-    const newPhoto = usePhoto? await readFileAsDataURL(document.getElementById('nPhoto')) : null;
+    const newPhoto = usePhoto? await uploadImageAndGetURL(document.getElementById('nPhoto'), 'board-notice') : null;
     const data = { date, text, usePhoto, photo: usePhoto? (newPhoto||tempPhoto) : null };
     if(existing){ Object.assign(existing, data); }
     else{ DB.notices.push({id:uid(), ...data, addedAt:Date.now()}); }
