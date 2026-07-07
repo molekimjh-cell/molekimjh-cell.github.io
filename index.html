@@ -275,7 +275,27 @@ footer.site{text-align:center;padding:26px;color:var(--muted);font-size:12.5px;b
   <div class="modal" id="modalBody"></div>
 </div>
 
+<!-- Firebase (shared cloud database so edits made by the admin show up for every visitor, on every device/browser) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <script>
+/* ================= FIREBASE CONFIG =================
+   Replace the values below with YOUR OWN Firebase project's config
+   (Firebase Console → Project settings → General → "Your apps" → SDK setup and configuration).
+   This config is safe to keep in public HTML — Firebase security is enforced by
+   Firestore Rules (see setup notes), not by hiding this object. */
+const firebaseConfig = {
+  apiKey: "AIzaSyAoW1rSn0UibjlMJ3T4CLc7dsVMpenQTjk",
+  authDomain: "molekimjh-cell.firebaseapp.com",
+  projectId: "molekimjh-cell",
+  storageBucket: "molekimjh-cell.firebasestorage.app",
+  messagingSenderId: "34954130543",
+  appId: "1:34954130543:web:66efd58381fd791acdc99a"
+};
+firebase.initializeApp(firebaseConfig);
+const fsDb = firebase.firestore();
+
 /* ================= CONFIG ================= */
 const PAGES = [
   {id:'home', label:'Home'},
@@ -4681,32 +4701,30 @@ let DB = {
 };
 
 /* ================= STORAGE HELPERS =================
-   NOTE: This site runs as a plain static page (e.g. on GitHub Pages),
-   so it uses the browser's localStorage instead of Claude's artifact
-   storage API. IMPORTANT LIMITATION: localStorage is per-browser/device.
-   Content edited by an admin will only be visible on that same browser —
-   it will NOT automatically appear for other visitors on other computers.
-   See the setup notes for how to upgrade to a shared online database
-   (e.g. Firebase) if you need edits to show for every visitor. */
+   Data is stored in Firebase Firestore, a free shared cloud database.
+   This means content added or edited by the admin is saved online and
+   shows up for EVERY visitor, on every browser/device — not just the
+   browser that made the edit. */
 async function loadKey(key, fallback){
   try{
-    const raw = window.localStorage.getItem(key);
-    if(raw !== null && raw !== undefined){
-      return JSON.parse(raw);
+    const doc = await fsDb.collection('bmiel').doc(key).get();
+    if(doc.exists && doc.data().value !== undefined){
+      return JSON.parse(doc.data().value);
     }
     return fallback;
   }catch(e){
+    console.error('load failed', key, e);
     return fallback;
   }
 }
 async function saveKey(key, value, opts){
   const silent = opts && opts.silent;
   try{
-    window.localStorage.setItem(key, JSON.stringify(value));
+    await fsDb.collection('bmiel').doc(key).set({ value: JSON.stringify(value) });
     return true;
   }catch(e){
     console.error('save failed', key, e);
-    if(!silent){ alert('Save failed — your browser storage may be full or blocked (e.g. private browsing mode). Try clearing some data or using a normal browser window.'); }
+    if(!silent){ alert('Save failed — please check your internet connection and try again. (If this keeps happening, an uploaded photo may be too large — try a smaller image.)'); }
     return false;
   }
 }
