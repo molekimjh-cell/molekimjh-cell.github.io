@@ -5458,13 +5458,20 @@ function openProfLinksForm(){
     closeModal(); renderProfessor();
   });
 }
+function profDateSortKey(dateStr){
+  if(!dateStr) return '';
+  // Use the start of a period (before ' - ') as the sort key, e.g.
+  // "2024.03 - Current" -> "2024.03", "2015.09.17" -> "2015.09.17"
+  return dateStr.split(' - ')[0].trim();
+}
 function profSection(label, list, key){
+  const sorted = [...list].sort((a,b)=> profDateSortKey(b.date).localeCompare(profDateSortKey(a.date)));
   return `
     <div class="row-with-add">
       <div class="subhead">${label}</div>
       ${isAdmin? `<button class="add-btn" onclick="openProfItemForm('${key}')">+ Add</button>`:''}
     </div>
-    ${list.length===0? `<div class="empty-note">No entries yet.</div>` : list.map(item=>`
+    ${sorted.length===0? `<div class="empty-note">No entries yet.</div>` : sorted.map(item=>`
       <div class="entry-card">
         ${item.date? `<div class="date-tag">${esc(item.date)}</div>`:''}
         <p>${esc(item.text)}</p>
