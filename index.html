@@ -519,7 +519,8 @@ const SEED_DATA = {
   "membersAlumni": [
     {
       "name": "Soo-Hyang Chi",
-      "degree": "Master (2023.03-2025.08)",
+      "hasDegree": true,
+      "degreeText": "Master (2023.03-2025.08)",
       "enrollYear": 2023,
       "enrollMonth": 3,
       "domJ1": 1,
@@ -531,7 +532,8 @@ const SEED_DATA = {
     },
     {
       "name": "Hwi Dong Kim",
-      "degree": "Undergraduate Intern (Yonsei University, Mirae Campus), 2023.03-2023.06",
+      "hasUndergradIntern": true,
+      "undergradInternText": "Yonsei University, Mirae Campus, 2023.03-2023.06",
       "enrollYear": 2023,
       "enrollMonth": 3,
       "domJ1": 0,
@@ -543,7 +545,8 @@ const SEED_DATA = {
     },
     {
       "name": "Hyun Woo Jung",
-      "degree": "Undergraduate Intern (Yonsei University, Mirae Campus), 2023.05-2024.02",
+      "hasUndergradIntern": true,
+      "undergradInternText": "Yonsei University, Mirae Campus, 2023.05-2024.02",
       "enrollYear": 2023,
       "enrollMonth": 5,
       "domJ1": 0,
@@ -555,7 +558,8 @@ const SEED_DATA = {
     },
     {
       "name": "Kangmin No",
-      "degree": "Undergraduate Intern (Chung-Ang University), 2025.05-2026.02",
+      "hasUndergradIntern": true,
+      "undergradInternText": "Chung-Ang University, 2025.05-2026.02",
       "enrollYear": 2025,
       "enrollMonth": 5,
       "domJ1": 0,
@@ -5305,6 +5309,24 @@ function renderHome(){
         </div>`:''}
       </div>
     `).join(''); })()}
+
+    <div class="row-with-add" style="margin-top:36px;">
+      <div class="subhead" style="margin:0;">Contact</div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);">
+      <div style="flex:1 1 320px;aspect-ratio:1/1;min-width:280px;">
+        <iframe
+          src="https://www.google.com/maps/d/u/0/embed?mid=10VCiE-2tl5efF6dtTODhsXXS83kPgGs&ehbc=2E312F"
+          style="width:100%;height:100%;border:0;display:block;"
+          allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+      </div>
+      <div style="flex:1 1 320px;min-width:280px;padding:24px;display:flex;flex-direction:column;justify-content:center;">
+        <p style="margin:0 0 14px;font-size:14.5px;line-height:1.7;">84 Heukseok-ro, Dongjak-gu, Seoul, Republic of Korea (Zipcode 06974)</p>
+        <p style="margin:0 0 6px;font-size:14.5px;line-height:1.7;">Professor: (jihoonkim at cau.ac.kr)</p>
+        <p style="margin:0;font-size:14.5px;line-height:1.7;">Lab: 202 Bldg. 406 Rm.</p>
+      </div>
+    </div>
   `;
   startHeroTimer(journals.length);
 }
@@ -5547,6 +5569,21 @@ function memberRoleLabel(role){
   if(role==='corr') return 'Corresponding Author';
   return '';
 }
+function alumniDegreeLines(a){
+  // Order: Post.Doc., Post.M.S., Degree, Post-Undergraduate, Undergraduate intern
+  const parts = [];
+  if(a.hasPostDoc || a.hasPostMS || a.hasDegree || a.hasPostUndergrad || a.hasUndergradIntern){
+    if(a.hasPostDoc) parts.push('Post.Doc.'+(a.postDocText?': '+esc(a.postDocText):''));
+    if(a.hasPostMS) parts.push('Post.M.S.'+(a.postMSText?': '+esc(a.postMSText):''));
+    if(a.hasDegree) parts.push('Degree'+(a.degreeText?': '+esc(a.degreeText):''));
+    if(a.hasPostUndergrad) parts.push('Post-Undergraduate'+(a.postUndergradText?': '+esc(a.postUndergradText):''));
+    if(a.hasUndergradIntern) parts.push('Undergraduate intern'+(a.undergradInternText?': '+esc(a.undergradInternText):''));
+  } else if(a.degree){
+    // backward-compatible fallback for older records saved before this structured format existed
+    parts.push(esc(a.degree));
+  }
+  return parts.join('<br>');
+}
 function renderMember(){
   const el = document.getElementById('page-member');
   const currentSorted = [...DB.membersCurrent].sort((a,b)=>enrollKey(a)-enrollKey(b));
@@ -5570,7 +5607,7 @@ function renderMember(){
           ${m.photo? `<img class="member-photo" src="${imgSrc(m.photo)}">`:`<div class="member-photo-empty">No photo</div>`}
           <div class="member-info">
             <div class="deg" style="margin-bottom:2px;">${m.name?esc(m.name):''}</div>
-            <div class="deg" style="font-size:13px;font-weight:600;color:var(--muted);">${esc(m.degree)}${m.enrollYear? ` <span style="color:var(--gold);font-weight:600;font-size:12.5px;">(${m.enrollYear}${m.enrollMonth?'.'+String(m.enrollMonth).padStart(2,'0'):''})</span>`:''}${m.hasIntern && m.internUndergrad ? `<br>Undergraduate Intern${m.internUndergradText? ': '+esc(m.internUndergradText):''}`:''}${m.hasIntern && m.internPost ? `<br>Post-undergraduate Intern${m.internPostText? ': '+esc(m.internPostText):''}`:''}</div>
+            <div class="deg" style="font-size:13px;font-weight:600;color:var(--muted);">${esc(m.degree)}${m.enrollYear? ` <span style="color:var(--gold);font-weight:600;font-size:12.5px;">(${m.enrollYear}${m.enrollMonth?'.'+String(m.enrollMonth).padStart(2,'0'):''})</span>`:''}${m.hasIntern && m.internPost ? `<br>Post-undergraduate Intern${m.internPostText? ': '+esc(m.internPostText):''}`:''}${m.hasIntern && m.internUndergrad ? `<br>Undergraduate Intern${m.internUndergradText? ': '+esc(m.internUndergradText):''}`:''}</div>
             <div><span class="lbl">Research area</span> ${esc(m.researchArea)}</div>
 
             <div style="margin-top:12px;"><span class="lbl">Publication</span></div>
@@ -5618,7 +5655,7 @@ function renderMember(){
           <tr>
             <td>${esc(a.name||'')}</td>
             <td>${a.enrollYear?esc(a.enrollYear)+(a.enrollMonth?'.'+String(a.enrollMonth).padStart(2,'0'):''):''}</td>
-            <td>${esc(a.degree)}</td>
+            <td>${alumniDegreeLines(a)}</td>
             <td>${esc(a.domJ1)}</td><td>${esc(a.domJCo)}</td>
             <td>${esc(a.scieJ1)}</td><td>${esc(a.scieJCo)}</td>
             <td>${esc(a.confInt)}</td><td>${esc(a.confDom)}</td>
@@ -5640,10 +5677,10 @@ function openCurrentMemberForm(id){
     <div class="field"><label>Degree (e.g. Ph.D. Student, M.S. Student)</label><input type="text" id="mDegree" value="${existing?esc(existing.degree):''}"></div>
     <div class="check-row"><input type="checkbox" id="mHasIntern" ${existing&&existing.hasIntern?'checked':''} onchange="document.getElementById('mInternField').style.display=this.checked?'block':'none'"> <label for="mHasIntern" style="margin:0;text-transform:none;font-weight:400;">Has intern experience</label></div>
     <div class="field" id="mInternField" style="display:${existing&&existing.hasIntern?'block':'none'};margin-top:6px;">
-      <div class="check-row"><input type="checkbox" id="mInternUndergrad" ${existing&&existing.internUndergrad?'checked':''} onchange="document.getElementById('mInternUndergradText').style.display=this.checked?'block':'none'"> <label for="mInternUndergrad" style="margin:0;text-transform:none;font-weight:400;">Undergraduate intern</label></div>
-      <input type="text" id="mInternUndergradText" style="display:${existing&&existing.internUndergrad?'block':'none'};margin:4px 0 10px;" value="${existing?esc(existing.internUndergradText||''):''}" placeholder="e.g. Yonsei University, Mirae Campus, 2023.03-2023.06">
       <div class="check-row"><input type="checkbox" id="mInternPost" ${existing&&existing.internPost?'checked':''} onchange="document.getElementById('mInternPostText').style.display=this.checked?'block':'none'"> <label for="mInternPost" style="margin:0;text-transform:none;font-weight:400;">Post-undergraduate intern</label></div>
-      <input type="text" id="mInternPostText" style="display:${existing&&existing.internPost?'block':'none'};margin:4px 0 0;" value="${existing?esc(existing.internPostText||''):''}" placeholder="e.g. Chung-Ang University, 2025.05-2026.02">
+      <input type="text" id="mInternPostText" style="display:${existing&&existing.internPost?'block':'none'};margin:4px 0 10px;" value="${existing?esc(existing.internPostText||''):''}" placeholder="e.g. Chung-Ang University, 2025.05-2026.02">
+      <div class="check-row"><input type="checkbox" id="mInternUndergrad" ${existing&&existing.internUndergrad?'checked':''} onchange="document.getElementById('mInternUndergradText').style.display=this.checked?'block':'none'"> <label for="mInternUndergrad" style="margin:0;text-transform:none;font-weight:400;">Undergraduate intern</label></div>
+      <input type="text" id="mInternUndergradText" style="display:${existing&&existing.internUndergrad?'block':'none'};margin:4px 0 0;" value="${existing?esc(existing.internUndergradText||''):''}" placeholder="e.g. Yonsei University, Mirae Campus, 2023.03-2023.06">
     </div>
     <div class="field-row">
       <div class="field"><label>Enrollment Year</label><input type="number" id="mEnrollYear" value="${existing&&existing.enrollYear?existing.enrollYear:''}" placeholder="e.g. 2022"></div>
@@ -5792,7 +5829,19 @@ function openAlumniForm(id){
   const f = existing || {};
   showModal(existing?'Edit Alumni Record':'Add Alumnus / Alumna', `
     <div class="field"><label>Name</label><input type="text" id="aName" value="${esc(f.name||'')}" placeholder="e.g. Soo-Hyang Chi"></div>
-    <div class="field"><label>Degree</label><input type="text" id="aDegree" value="${esc(f.degree||'')}" placeholder="e.g. Ph.D., 2024"></div>
+    <div class="field">
+      <label>Status / Degree (check all that apply, enter period for each)</label>
+      <div class="check-row"><input type="checkbox" id="aHasPostDoc" ${f.hasPostDoc?'checked':''} onchange="document.getElementById('aPostDocText').style.display=this.checked?'block':'none'"> <label for="aHasPostDoc" style="margin:0;text-transform:none;font-weight:400;">Post.Doc.</label></div>
+      <input type="text" id="aPostDocText" style="display:${f.hasPostDoc?'block':'none'};margin:4px 0 10px;" value="${esc(f.postDocText||'')}" placeholder="e.g. 2024.03-2026.02">
+      <div class="check-row"><input type="checkbox" id="aHasPostMS" ${f.hasPostMS?'checked':''} onchange="document.getElementById('aPostMSText').style.display=this.checked?'block':'none'"> <label for="aHasPostMS" style="margin:0;text-transform:none;font-weight:400;">Post.M.S.</label></div>
+      <input type="text" id="aPostMSText" style="display:${f.hasPostMS?'block':'none'};margin:4px 0 10px;" value="${esc(f.postMSText||'')}" placeholder="e.g. 2023.03-2024.02">
+      <div class="check-row"><input type="checkbox" id="aHasDegree" ${f.hasDegree?'checked':''} onchange="document.getElementById('aDegreeText').style.display=this.checked?'block':'none'"> <label for="aHasDegree" style="margin:0;text-transform:none;font-weight:400;">Degree</label></div>
+      <input type="text" id="aDegreeText" style="display:${f.hasDegree?'block':'none'};margin:4px 0 10px;" value="${esc(f.degreeText||'')}" placeholder="e.g. Master (2023.03-2025.08)">
+      <div class="check-row"><input type="checkbox" id="aHasPostUndergrad" ${f.hasPostUndergrad?'checked':''} onchange="document.getElementById('aPostUndergradText').style.display=this.checked?'block':'none'"> <label for="aHasPostUndergrad" style="margin:0;text-transform:none;font-weight:400;">Post-Undergraduate</label></div>
+      <input type="text" id="aPostUndergradText" style="display:${f.hasPostUndergrad?'block':'none'};margin:4px 0 10px;" value="${esc(f.postUndergradText||'')}" placeholder="e.g. 2025.05-2026.02">
+      <div class="check-row"><input type="checkbox" id="aHasUndergradIntern" ${f.hasUndergradIntern?'checked':''} onchange="document.getElementById('aUndergradInternText').style.display=this.checked?'block':'none'"> <label for="aHasUndergradIntern" style="margin:0;text-transform:none;font-weight:400;">Undergraduate intern</label></div>
+      <input type="text" id="aUndergradInternText" style="display:${f.hasUndergradIntern?'block':'none'};margin:4px 0 0;" value="${esc(f.undergradInternText||'')}" placeholder="e.g. 2023.03-2023.06">
+    </div>
     <div class="field-row">
       <div class="field"><label>Enrollment Year</label><input type="number" id="aEnrollYear" value="${f.enrollYear||''}" placeholder="e.g. 2018"></div>
       <div class="field"><label>Enrollment Month</label><select id="aEnrollMonth">
@@ -5813,11 +5862,21 @@ function openAlumniForm(id){
       <div class="field"><label>Conference (Domestic)</label><input type="number" id="aConfDom" value="${f.confDom??0}"></div>
     </div>
   `, async ()=>{
-    const degree = document.getElementById('aDegree').value.trim();
-    if(!degree){ alert('Please enter a degree.'); return; }
+    const name = document.getElementById('aName').value.trim();
+    if(!name){ alert('Please enter a name.'); return; }
+    const hasPostDoc = document.getElementById('aHasPostDoc').checked;
+    const hasPostMS = document.getElementById('aHasPostMS').checked;
+    const hasDegree = document.getElementById('aHasDegree').checked;
+    const hasPostUndergrad = document.getElementById('aHasPostUndergrad').checked;
+    const hasUndergradIntern = document.getElementById('aHasUndergradIntern').checked;
+    if(!hasPostDoc && !hasPostMS && !hasDegree && !hasPostUndergrad && !hasUndergradIntern){ alert('Please check at least one status/degree option.'); return; }
     const data = {
-      name: document.getElementById('aName').value.trim(),
-      degree,
+      name,
+      hasPostDoc, postDocText: hasPostDoc? document.getElementById('aPostDocText').value.trim() : '',
+      hasPostMS, postMSText: hasPostMS? document.getElementById('aPostMSText').value.trim() : '',
+      hasDegree, degreeText: hasDegree? document.getElementById('aDegreeText').value.trim() : '',
+      hasPostUndergrad, postUndergradText: hasPostUndergrad? document.getElementById('aPostUndergradText').value.trim() : '',
+      hasUndergradIntern, undergradInternText: hasUndergradIntern? document.getElementById('aUndergradInternText').value.trim() : '',
       enrollYear: +document.getElementById('aEnrollYear').value || null,
       enrollMonth: +document.getElementById('aEnrollMonth').value || null,
       domJ1: +document.getElementById('aDomJ1').value||0,
