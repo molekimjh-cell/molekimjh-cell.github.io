@@ -121,7 +121,7 @@ main{max-width:1180px;margin:0 auto;padding:40px 24px 100px;min-height:60vh;}
 .member-info div{margin-bottom:4px;}
 .member-info .lbl{color:var(--gold);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:0.4px;}
 
-.alumni-table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--paper);}
+.alumni-table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--paper);table-layout:fixed;}
 .alumni-table th{background:var(--navy);color:#fff;font-weight:600;padding:10px 12px;text-align:left;font-size:12px;}
 .alumni-table td{padding:10px 12px;border-bottom:1px solid var(--line);}
 .alumni-table tr:hover td{background:#fbfaf7;}
@@ -520,7 +520,8 @@ const SEED_DATA = {
     {
       "name": "Soo-Hyang Chi",
       "hasDegree": true,
-      "degreeText": "Master (2023.03-2025.08)",
+      "degreeType": "Master",
+      "degreeText": "2023.03-2025.08",
       "enrollYear": 2023,
       "enrollMonth": 3,
       "domJ1": 1,
@@ -5573,11 +5574,11 @@ function alumniDegreeLines(a){
   // Order: Post.Doc., Post.M.S., Degree, Post-Undergraduate, Undergraduate intern
   const parts = [];
   if(a.hasPostDoc || a.hasPostMS || a.hasDegree || a.hasPostUndergrad || a.hasUndergradIntern){
-    if(a.hasPostDoc) parts.push('Post.Doc.'+(a.postDocText?': '+esc(a.postDocText):''));
-    if(a.hasPostMS) parts.push('Post.M.S.'+(a.postMSText?': '+esc(a.postMSText):''));
-    if(a.hasDegree) parts.push('Degree'+(a.degreeText?': '+esc(a.degreeText):''));
-    if(a.hasPostUndergrad) parts.push('Post-Undergraduate'+(a.postUndergradText?': '+esc(a.postUndergradText):''));
-    if(a.hasUndergradIntern) parts.push('Undergraduate intern'+(a.undergradInternText?': '+esc(a.undergradInternText):''));
+    if(a.hasPostDoc) parts.push('Post.Doc.'+(a.postDocText?'<br>'+esc(a.postDocText):''));
+    if(a.hasPostMS) parts.push('Post.M.S.'+(a.postMSText?'<br>'+esc(a.postMSText):''));
+    if(a.hasDegree) parts.push((a.degreeType||'Degree')+(a.degreeText?'<br>'+esc(a.degreeText):''));
+    if(a.hasPostUndergrad) parts.push('Post-Undergraduate'+(a.postUndergradText?'<br>'+esc(a.postUndergradText):''));
+    if(a.hasUndergradIntern) parts.push('Undergraduate intern'+(a.undergradInternText?'<br>'+esc(a.undergradInternText):''));
   } else if(a.degree){
     // backward-compatible fallback for older records saved before this structured format existed
     parts.push(esc(a.degree));
@@ -5645,6 +5646,18 @@ function renderMember(){
     </div>
     ${alumniSorted.length===0? `<div class="empty-note">No alumni listed.</div>` : `
     <table class="alumni-table">
+      <colgroup>
+        <col style="width:20%;">
+        <col style="width:8%;">
+        <col style="width:22%;">
+        <col style="width:7%;">
+        <col style="width:7%;">
+        <col style="width:7%;">
+        <col style="width:7%;">
+        <col style="width:7%;">
+        <col style="width:7%;">
+        ${isAdmin?'<col style="width:auto;">':''}
+      </colgroup>
       <thead><tr>
         <th>Name</th><th>Enrolled (Y.M)</th><th>Degree</th><th>Domestic Journal (1st)</th><th>Domestic Journal (Co)</th>
         <th>SCIE Journal (1st)</th><th>SCIE Journal (Co)</th>
@@ -5653,7 +5666,7 @@ function renderMember(){
       <tbody>
         ${alumniSorted.map(a=>`
           <tr>
-            <td>${esc(a.name||'')}</td>
+            <td style="white-space:nowrap;">${esc(a.name||'')}</td>
             <td>${a.enrollYear?esc(a.enrollYear)+(a.enrollMonth?'.'+String(a.enrollMonth).padStart(2,'0'):''):''}</td>
             <td>${alumniDegreeLines(a)}</td>
             <td>${esc(a.domJ1)}</td><td>${esc(a.domJCo)}</td>
@@ -5835,8 +5848,15 @@ function openAlumniForm(id){
       <input type="text" id="aPostDocText" style="display:${f.hasPostDoc?'block':'none'};margin:4px 0 10px;" value="${esc(f.postDocText||'')}" placeholder="e.g. 2024.03-2026.02">
       <div class="check-row"><input type="checkbox" id="aHasPostMS" ${f.hasPostMS?'checked':''} onchange="document.getElementById('aPostMSText').style.display=this.checked?'block':'none'"> <label for="aHasPostMS" style="margin:0;text-transform:none;font-weight:400;">Post.M.S.</label></div>
       <input type="text" id="aPostMSText" style="display:${f.hasPostMS?'block':'none'};margin:4px 0 10px;" value="${esc(f.postMSText||'')}" placeholder="e.g. 2023.03-2024.02">
-      <div class="check-row"><input type="checkbox" id="aHasDegree" ${f.hasDegree?'checked':''} onchange="document.getElementById('aDegreeText').style.display=this.checked?'block':'none'"> <label for="aHasDegree" style="margin:0;text-transform:none;font-weight:400;">Degree</label></div>
-      <input type="text" id="aDegreeText" style="display:${f.hasDegree?'block':'none'};margin:4px 0 10px;" value="${esc(f.degreeText||'')}" placeholder="e.g. Master (2023.03-2025.08)">
+      <div class="check-row"><input type="checkbox" id="aHasDegree" ${f.hasDegree?'checked':''} onchange="document.getElementById('aDegreeField').style.display=this.checked?'block':'none'"> <label for="aHasDegree" style="margin:0;text-transform:none;font-weight:400;">Degree</label></div>
+      <div id="aDegreeField" style="display:${f.hasDegree?'block':'none'};margin:4px 0 10px;">
+        <select id="aDegreeType" style="margin-bottom:6px;">
+          <option value="Master" ${f.degreeType==='Master'?'selected':''}>Master</option>
+          <option value="Integrated M.S.-Ph.D." ${f.degreeType==='Integrated M.S.-Ph.D.'?'selected':''}>Integrated M.S.-Ph.D.</option>
+          <option value="Ph.D." ${f.degreeType==='Ph.D.'?'selected':''}>Ph.D.</option>
+        </select>
+        <input type="text" id="aDegreeText" value="${esc(f.degreeText||'')}" placeholder="e.g. 2023.03-2025.08">
+      </div>
       <div class="check-row"><input type="checkbox" id="aHasPostUndergrad" ${f.hasPostUndergrad?'checked':''} onchange="document.getElementById('aPostUndergradText').style.display=this.checked?'block':'none'"> <label for="aHasPostUndergrad" style="margin:0;text-transform:none;font-weight:400;">Post-Undergraduate</label></div>
       <input type="text" id="aPostUndergradText" style="display:${f.hasPostUndergrad?'block':'none'};margin:4px 0 10px;" value="${esc(f.postUndergradText||'')}" placeholder="e.g. 2025.05-2026.02">
       <div class="check-row"><input type="checkbox" id="aHasUndergradIntern" ${f.hasUndergradIntern?'checked':''} onchange="document.getElementById('aUndergradInternText').style.display=this.checked?'block':'none'"> <label for="aHasUndergradIntern" style="margin:0;text-transform:none;font-weight:400;">Undergraduate intern</label></div>
@@ -5874,7 +5894,7 @@ function openAlumniForm(id){
       name,
       hasPostDoc, postDocText: hasPostDoc? document.getElementById('aPostDocText').value.trim() : '',
       hasPostMS, postMSText: hasPostMS? document.getElementById('aPostMSText').value.trim() : '',
-      hasDegree, degreeText: hasDegree? document.getElementById('aDegreeText').value.trim() : '',
+      hasDegree, degreeType: hasDegree? document.getElementById('aDegreeType').value : '', degreeText: hasDegree? document.getElementById('aDegreeText').value.trim() : '',
       hasPostUndergrad, postUndergradText: hasPostUndergrad? document.getElementById('aPostUndergradText').value.trim() : '',
       hasUndergradIntern, undergradInternText: hasUndergradIntern? document.getElementById('aUndergradInternText').value.trim() : '',
       enrollYear: +document.getElementById('aEnrollYear').value || null,
