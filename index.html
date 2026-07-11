@@ -5387,7 +5387,7 @@ function setHero(i, fromTimer){
 function openJournalForm(id){
   const existing = id? DB.journals.find(j=>j.id===id) : null;
   let tempImage = existing? existing.image : null;
-  const allPubsSorted = [...DB.publications].sort((a,b)=> (pubDateKey?pubDateKey(b).localeCompare(pubDateKey(a)):0));
+  const allPubsSorted = [...DB.publications].filter(p=>p.category!=='insubmission').sort((a,b)=> (pubDateKey?pubDateKey(b).localeCompare(pubDateKey(a)):0));
   showModal(existing? 'Edit Journal Highlight':'Add Journal Highlight', `
     <div class="field"><label>Publication</label>
       <select id="jPubId">
@@ -5737,7 +5737,7 @@ function openMemberPubPicker(memberId){
   const member = DB.membersCurrent.find(m=>m.id===memberId);
   if(!member) return;
   const existingLinks = getMemberPubLinks(member);
-  const allPubsSorted = [...DB.publications].sort((a,b)=> pubSortValue(b).localeCompare(pubSortValue(a)));
+  const allPubsSorted = [...DB.publications].filter(p=>p.category!=='insubmission').sort((a,b)=> pubSortValue(b).localeCompare(pubSortValue(a)));
   if(allPubsSorted.length===0){
     showModal('Link Publication', `<p class="small-note">No publications exist yet. Add publications first from the Publication menu, then come back here to link them.</p>`, ()=>closeModal(), 'Close');
     return;
@@ -6000,8 +6000,12 @@ function pubDateKey(p){
 }
 function renderPublication(){
   const el = document.getElementById('page-publication');
-  const sciePubs = DB.publications.filter(p=>p.category!=='nonscie');
+  const subPubs = DB.publications.filter(p=>p.category==='insubmission');
+  const sciePubs = DB.publications.filter(p=>p.category!=='nonscie' && p.category!=='insubmission');
   const nonsciePubs = DB.publications.filter(p=>p.category==='nonscie');
+
+  const subDisp = [...subPubs].sort((a,b)=> b.addedAt-a.addedAt);
+  let subBody = subDisp.map(p=>renderSubPubItem(p)).join('');
 
   // SCIE: assign ascending numbers by publication date (oldest = 1, newest = highest)
   const scieAsc = [...sciePubs].sort((a,b)=> pubDateKey(a).localeCompare(pubDateKey(b)));
@@ -6026,13 +6030,34 @@ function renderPublication(){
       ${isAdmin? `<button class="add-btn" onclick="openPublicationForm(null,'scie')">+ Add publication</button>`:''}
     </div>
     <div style="border-bottom:2px solid var(--navy);margin-bottom:10px;"></div>
-    ${sciePubs.length===0? `<div class="empty-note">No publications yet.</div>` : scieBody}
+
+    <div class="row-with-add">
+      <div class="year-head" style="margin:0;">In Submission</div>
+      ${isAdmin? `<button class="add-btn" onclick="openPublicationForm(null,'insubmission')">+ Add entry</button>`:''}
+    </div>
+    ${subPubs.length===0? `<div class="empty-note">No entries yet.</div>` : subBody}
+
+    ${sciePubs.length===0? `<div class="empty-note" style="margin-top:20px;">No publications yet.</div>` : scieBody}
 
     <div class="row-with-add" style="margin-top:40px;">
       <div class="subhead">Non-SCIE</div>
       ${isAdmin? `<button class="add-btn" onclick="openPublicationForm(null,'nonscie')">+ Add Non-SCIE publication</button>`:''}
     </div>
     ${nonsciePubs.length===0? `<div class="empty-note">No Non-SCIE publications yet.</div>` : nonscieBody}
+  `;
+}
+function renderSubPubItem(p){
+  const authorsHtml = p.authors.map(formatAuthorName).join(', ');
+  return `
+    <div class="pub-item">
+      <div class="pub-body">
+        <p>${authorsHtml}. <span class="jt-bold">[${esc(p.status||'In Submission')}]</span></p>
+        ${isAdmin? `<div class="edit-controls">
+          <button onclick="openPublicationForm('${p.id}','insubmission')">Edit</button>
+          <button class="del" onclick="deletePublication('${p.id}')">Delete</button>
+        </div>`:''}
+      </div>
+    </div>
   `;
 }
 function formatAuthorName(a){
@@ -6130,9 +6155,39 @@ function syncAuthorsFromDom(){
 }
 function openPublicationForm(id, category){
   const existing = id? DB.publications.find(p=>p.id===id): null;
-  const cat = existing ? (existing.category==='nonscie'?'nonscie':'scie') : (category||'scie');
+  const cat = existing ? (existing.category==='nonscie'?'nonscie':existing.category==='insubmission'?'insubmission':'scie') : (category||'scie');
   currentAuthors = existing? existing.authors.map(a=>({...a,_rid:uid()})) : [{_rid:uid(),name:'',role:'first',corrType:'Corresponding author'}];
   const f = existing || {};
+
+  if(cat==='insubmission'){
+    showModal(existing?'Edit In Submission Entry':'Add In Submission / In Revision Entry', `
+      <div class="field"><label>Authors</label>
+        <div id="authorList">${currentAuthors.map(authorRowHtml).join('')}</div>
+        <button class="btn-secondary" type="button" onclick="addAuthorRow()">+ Add author</button>
+        <p class="small-note">Select each author's role. If Jihoon Kim is marked "Corresponding author," also choose whether it's sole or co-corresponding.</p>
+      </div>
+      <div class="field"><label>Status</label>
+        <select id="pSubStatus">
+          <option value="In Submission" ${f.status==='In Submission'||!f.status?'selected':''}>In Submission</option>
+          <option value="In Revision" ${f.status==='In Revision'?'selected':''}>In Revision</option>
+        </select>
+      </div>
+    `, async ()=>{
+      syncAuthorsFromDom();
+      const authors = currentAuthors.filter(a=>a.name).map(({_rid,...rest})=>rest);
+      if(authors.length===0){ alert('Please add at least one author.'); return; }
+      const data = {
+        category: 'insubmission',
+        authors,
+        status: document.getElementById('pSubStatus').value,
+      };
+      if(existing){ Object.assign(existing, data); }
+      else{ DB.publications.push({id:uid(), ...data, addedAt:Date.now()}); }
+      await saveKey('bmiel-publications', DB.publications);
+      closeModal(); renderPublication();
+    });
+    return;
+  }
 
   if(cat==='nonscie'){
     showModal(existing?'Edit Non-SCIE Publication':'Add Non-SCIE Publication', `
@@ -6625,7 +6680,7 @@ async function mergeSeedDataIntoDB(){
   // auto-link each current member's own publications by matching author name,
   // and infer their role on that paper from the publication's own author-list role
   DB.membersCurrent.forEach(m=>{
-    const linked = DB.publications.filter(p=>p.authors.some(a=>a.name.trim().toLowerCase()===m.name.trim().toLowerCase()));
+    const linked = DB.publications.filter(p=>p.category!=='insubmission' && p.authors.some(a=>a.name.trim().toLowerCase()===m.name.trim().toLowerCase()));
     m.pubLinks = linked.map(p=>{
       const authorMatch = p.authors.find(a=>a.name.trim().toLowerCase()===m.name.trim().toLowerCase());
       let role = 'co';
