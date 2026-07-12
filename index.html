@@ -4875,23 +4875,38 @@ async function sha256Hex(text){
 }
 
 async function loadAll(){
-  DB.logo = await loadKey('bmiel-logo', '');
-  DB.journals = await loadKey('bmiel-journals', []);
-  DB.profPhoto = await loadKey('bmiel-prof-photo', '');
-  DB.profLinks = await loadKey('bmiel-prof-links', {linkedin:'', scholar:'', researchgate:'', orcid:''});
-  DB.profCareer = await loadKey('bmiel-prof-career', []);
-  DB.profEducation = await loadKey('bmiel-prof-education', []);
-  DB.profAwards = await loadKey('bmiel-prof-awards', []);
-  DB.profActivity = await loadKey('bmiel-prof-activity', []);
-  DB.membersCurrent = await loadKey('bmiel-members-current', []);
-  DB.membersAlumni = await loadKey('bmiel-members-alumni', []);
-  DB.research = await loadKey('bmiel-research', []);
-  DB.publications = await loadKey('bmiel-publications', []);
-  DB.patents = await loadKey('bmiel-patents', []);
-  DB.presentations = await loadKey('bmiel-presentations', []);
-  DB.notices = await loadKey('bmiel-notices', []);
-  DB.homeNotices = await loadKey('bmiel-home-notices', []);
-  DB.admins = await loadKey('bmiel-admin-accounts', []);
+  // Fetch all keys in parallel (instead of one-by-one) — this is the main fix for
+  // the slow initial load: awaiting 17 separate reads sequentially could take
+  // many seconds to over a minute; running them concurrently takes roughly as
+  // long as the single slowest read.
+  const [
+    logo, journals, profPhoto, profLinks, profCareer, profEducation, profAwards, profActivity,
+    membersCurrent, membersAlumni, research, publications, patents, presentations,
+    notices, homeNotices, admins
+  ] = await Promise.all([
+    loadKey('bmiel-logo', ''),
+    loadKey('bmiel-journals', []),
+    loadKey('bmiel-prof-photo', ''),
+    loadKey('bmiel-prof-links', {linkedin:'', scholar:'', researchgate:'', orcid:''}),
+    loadKey('bmiel-prof-career', []),
+    loadKey('bmiel-prof-education', []),
+    loadKey('bmiel-prof-awards', []),
+    loadKey('bmiel-prof-activity', []),
+    loadKey('bmiel-members-current', []),
+    loadKey('bmiel-members-alumni', []),
+    loadKey('bmiel-research', []),
+    loadKey('bmiel-publications', []),
+    loadKey('bmiel-patents', []),
+    loadKey('bmiel-presentations', []),
+    loadKey('bmiel-notices', []),
+    loadKey('bmiel-home-notices', []),
+    loadKey('bmiel-admin-accounts', []),
+  ]);
+  DB.logo = logo; DB.journals = journals; DB.profPhoto = profPhoto; DB.profLinks = profLinks;
+  DB.profCareer = profCareer; DB.profEducation = profEducation; DB.profAwards = profAwards; DB.profActivity = profActivity;
+  DB.membersCurrent = membersCurrent; DB.membersAlumni = membersAlumni; DB.research = research;
+  DB.publications = publications; DB.patents = patents; DB.presentations = presentations;
+  DB.notices = notices; DB.homeNotices = homeNotices; DB.admins = admins;
   await preloadImages();
 }
 
@@ -5140,13 +5155,14 @@ async function preloadImages(){
   const ids = collectImageRefs().filter(id=>!imageCache.has(id));
   if(ids.length===0) return;
   const CHUNK = 30; // Firestore 'in' query limit
-  for(let i=0;i<ids.length;i+=CHUNK){
-    const chunk = ids.slice(i, i+CHUNK);
+  const chunks = [];
+  for(let i=0;i<ids.length;i+=CHUNK) chunks.push(ids.slice(i, i+CHUNK));
+  await Promise.all(chunks.map(async chunk=>{
     try{
       const snap = await fsDb.collection('bmiel_images').where(firebase.firestore.FieldPath.documentId(), 'in', chunk).get();
       snap.forEach(doc=> imageCache.set(doc.id, doc.data().data));
     }catch(e){ console.error('image preload failed', e); }
-  }
+  }));
 }
 function loadImageElementFromFile(file){
   return new Promise((resolve,reject)=>{
