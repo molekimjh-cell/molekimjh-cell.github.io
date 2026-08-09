@@ -5,105 +5,124 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BMIEL — BioMaterials for Immuno-Engineering Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --navy:#132A46;
-  --navy-2:#1F4068;
-  --gold:#B8862E;
-  --gold-soft:#E7D3A6;
-  --cream:#F8F6F1;
+  --navy:#132B57;
+  --navy-2:#2955A3;
+  --gold:#3D6FD1;
+  --gold-soft:#E8EEFB;
+  --cream:#F4F5F7;
   --paper:#FFFFFF;
-  --ink:#1B1B1B;
-  --muted:#6B6B63;
-  --line:#E3DFD3;
-  --red:#A8271F;
-  --blue:#2A5DB0;
-  --serif:'Fraunces',Georgia,serif;
+  --ink:#181B22;
+  --muted:#6B7280;
+  --line:#E7E9EE;
+  --red:#C0392B;
+  --blue:#2955A3;
+  --serif:'Poppins',var(--sans);
   --sans:'Inter',system-ui,-apple-system,sans-serif;
-  --mono:'IBM Plex Mono',monospace;
+  --mono:'Poppins',monospace;
 }
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;}
-body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--cream);line-height:1.55;}
+body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--cream);line-height:1.6;}
 a{color:inherit;text-decoration:none;}
 button{font-family:var(--sans);cursor:pointer;}
 img{max-width:100%;display:block;}
 
 /* ---------- Header ---------- */
-header.site{position:sticky;top:0;z-index:100;background:var(--paper);border-bottom:1px solid var(--line);}
+header.site{position:sticky;top:0;z-index:100;background:var(--paper);border-bottom:1px solid var(--line);box-shadow:0 2px 14px rgba(19,43,87,0.05);}
 .header-top{max-width:1180px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px 24px;}
 .brand{display:flex;align-items:center;gap:16px;position:relative;}
 .brand-click{display:flex;align-items:center;gap:16px;cursor:pointer;}
-.brand-logo{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--navy) 0%,var(--navy-2) 55%,var(--gold) 100%);display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:0.5px;flex-shrink:0;position:relative;overflow:hidden;}
-.brand-logo::after{content:"";position:absolute;inset:6px;border:1px solid rgba(255,255,255,0.35);border-radius:50%;pointer-events:none;}
-.brand-logo img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.brand-logo{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--navy) 0%,var(--gold) 100%);display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--serif);font-weight:800;font-size:15px;letter-spacing:0.5px;flex-shrink:0;position:relative;overflow:hidden;}
+.brand-logo::after{content:"";position:absolute;inset:5px;border:1px solid rgba(255,255,255,0.35);border-radius:10px;pointer-events:none;}
+.brand-logo img{width:100%;height:100%;object-fit:cover;border-radius:14px;}
 .brand-logo.has-image{width:auto;border-radius:0;background:none;overflow:visible;}
 .brand-logo.has-image::after{display:none;}
-.brand-logo.has-image img{width:auto;height:52px;object-fit:unset;border-radius:2px;display:block;}
-.logo-edit-btn{border:1px solid var(--line);background:#fff;color:var(--muted);font-size:11px;padding:4px 10px;border-radius:2px;white-space:nowrap;}
+.brand-logo.has-image img{width:auto;height:52px;object-fit:unset;border-radius:6px;display:block;}
+.logo-edit-btn{border:1px solid var(--line);background:#fff;color:var(--muted);font-size:11px;padding:4px 10px;border-radius:20px;white-space:nowrap;}
 .logo-edit-btn:hover{color:var(--navy);border-color:var(--navy);}
-.brand-text .name{font-family:var(--serif);font-weight:700;font-size:26px;color:var(--navy);letter-spacing:0.5px;line-height:1;}
-.brand-text .full{font-size:13px;color:var(--muted);margin-top:3px;letter-spacing:0.3px;}
-.login-btn{border:1px solid var(--navy);background:transparent;color:var(--navy);padding:8px 18px;border-radius:2px;font-size:13px;font-weight:600;letter-spacing:0.4px;transition:.15s;}
+.brand-logo2-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;padding-right:16px;margin-right:2px;border-right:1px solid var(--line);}
+.brand-logo2{height:52px;max-width:130px;display:flex;align-items:center;justify-content:center;color:var(--muted);}
+.brand-logo2 img{height:52px;width:auto;max-width:130px;object-fit:contain;display:block;}
+.brand-text .name{font-family:var(--serif);font-weight:800;font-size:24px;color:var(--navy);letter-spacing:0.2px;line-height:1;}
+.brand-text .full{font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:0.2px;font-weight:600;text-transform:uppercase;}
+.login-btn{border:1.5px solid var(--navy);background:transparent;color:var(--navy);padding:8px 20px;border-radius:20px;font-size:13px;font-weight:700;letter-spacing:0.4px;transition:.15s;}
 .login-btn:hover{background:var(--navy);color:#fff;}
 .admin-pill{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted);}
 .admin-pill b{color:var(--gold);}
 .logout-btn{border:none;background:none;color:var(--red);font-size:12.5px;text-decoration:underline;}
 
-nav.main{max-width:1180px;margin:0 auto;padding:0 24px;display:flex;gap:2px;overflow-x:auto;}
-nav.main button{background:none;border:none;padding:14px 18px;font-size:14px;font-weight:600;color:var(--muted);letter-spacing:0.3px;border-bottom:3px solid transparent;white-space:nowrap;}
+nav.main{max-width:1180px;margin:0 auto;padding:0 24px;display:flex;gap:4px;overflow-x:auto;}
+nav.main .nav-item{position:relative;}
+nav.main button{background:none;border:none;padding:16px 18px;font-size:13.5px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;border-bottom:3px solid transparent;white-space:nowrap;font-family:var(--serif);}
 nav.main button.active{color:var(--navy);border-bottom-color:var(--gold);}
 nav.main button:hover{color:var(--navy);}
+nav.main .nav-dropdown{position:absolute;top:100%;left:0;min-width:190px;background:var(--paper);border-radius:0 0 12px 12px;box-shadow:0 12px 28px rgba(19,43,87,0.16);padding:6px;display:none;flex-direction:column;z-index:50;}
+nav.main .has-sub:hover .nav-dropdown{display:flex;}
+nav.main .nav-dropdown button{padding:11px 14px;font-size:12.5px;text-align:left;letter-spacing:0.4px;color:var(--ink);border-bottom:none;border-radius:8px;}
+nav.main .nav-dropdown button:hover{background:var(--gold-soft);color:var(--navy);}
+nav.main .nav-dropdown button.active{color:var(--navy);background:var(--gold-soft);}
 
 /* ---------- Layout ---------- */
-main{max-width:1180px;margin:0 auto;padding:40px 24px 100px;min-height:60vh;}
+main{max-width:1180px;margin:0 auto;padding:0 24px 100px;min-height:60vh;}
 .page{display:none;}
 .page.active{display:block;}
-.section-title{font-family:var(--serif);font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin:0 0 6px;}
-.page-title{font-family:var(--serif);font-size:34px;color:var(--navy);margin:0 0 30px;padding-bottom:16px;border-bottom:2px solid var(--navy);}
-.subhead{font-family:var(--serif);font-size:20px;color:var(--navy);margin:36px 0 16px;display:flex;align-items:center;gap:10px;}
-.subhead::before{content:"";width:8px;height:8px;background:var(--gold);border-radius:50%;flex-shrink:0;}
-.add-btn{background:var(--navy);color:#fff;border:none;padding:8px 16px;border-radius:2px;font-size:13px;font-weight:600;margin-left:auto;}
-.add-btn:hover{background:var(--navy-2);}
+.section-title{font-family:var(--serif);font-size:13px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);font-weight:700;margin:0 0 6px;}
+.page-title{font-family:var(--serif);font-weight:800;font-size:32px;color:var(--ink);margin:0 0 30px;padding-bottom:0;border-bottom:none;}
+.subhead{font-family:var(--serif);font-weight:800;font-size:19px;color:var(--ink);margin:36px 0 16px;display:flex;align-items:center;gap:8px;}
+.subhead::after{content:"";width:7px;height:7px;background:var(--gold);border-radius:50%;flex-shrink:0;}
+.add-btn{background:var(--navy);color:#fff;border:none;padding:9px 18px;border-radius:20px;font-size:12.5px;font-weight:700;margin-left:auto;letter-spacing:0.3px;transition:.15s;}
+.add-btn:hover{background:var(--gold);}
 .row-with-add{display:flex;align-items:center;gap:10px;}
 .empty-note{color:var(--muted);font-size:14px;padding:20px 0;font-style:italic;}
 
+/* ---------- Page hero banner (added to top of every inner page) ---------- */
+.page-hero{position:relative;margin:0 -24px 36px;padding:70px 24px 90px;background:linear-gradient(135deg,var(--navy) 0%,#1c3f7a 55%,var(--gold) 130%);overflow:hidden;text-align:center;}
+.page-hero::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 20%, rgba(255,255,255,0.08), transparent 45%),radial-gradient(circle at 85% 75%, rgba(255,255,255,0.10), transparent 45%);pointer-events:none;}
+.page-hero h1{position:relative;font-family:var(--serif);font-weight:800;font-size:42px;color:#fff;margin:0 0 8px;letter-spacing:1px;text-transform:uppercase;}
+.page-hero p{position:relative;color:rgba(255,255,255,0.75);font-size:14px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin:0;}
+@media(max-width:640px){
+  .page-hero{padding:48px 20px 60px;}
+  .page-hero h1{font-size:28px;}
+}
+
 /* ---------- Home hero ---------- */
-.hero-wrap{position:relative;border:1px solid var(--line);background:var(--paper);width:80%;margin:0 auto;}
+.hero-wrap{position:relative;border:none;background:var(--navy);width:100%;margin:0 -24px 0;border-radius:0;overflow:hidden;}
 .hero-slide{display:none;position:relative;}
 .hero-slide.show{display:block;}
-.hero-slide img{width:100%;height:auto;display:block;}
-.hero-slide .no-img-placeholder{width:100%;height:456px;background:linear-gradient(135deg,var(--navy),var(--navy-2));}
-.hero-slide .cap{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(to top, rgba(19,42,70,0.92), rgba(19,42,70,0));color:#fff;padding:36px 28px 18px;font-family:var(--serif);font-size:19px;line-height:1.4;}
-.hero-dots{display:flex;gap:8px;justify-content:center;padding:14px;background:var(--paper);}
-.hero-dots span{width:8px;height:8px;border-radius:50%;background:var(--line);cursor:pointer;}
+.hero-slide img{width:100%;height:auto;display:block;filter:brightness(0.55);}
+.hero-slide .no-img-placeholder{width:100%;height:456px;background:linear-gradient(135deg,var(--navy),var(--gold));}
+.hero-slide .cap{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(to top, rgba(10,20,40,0.95), rgba(10,20,40,0));color:#fff;padding:44px 32px 22px;font-family:var(--serif);font-weight:700;font-size:20px;line-height:1.4;}
+.hero-dots{display:flex;gap:8px;justify-content:center;padding:16px;background:var(--navy);}
+.hero-dots span{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.3);cursor:pointer;}
 .hero-dots span.on{background:var(--gold);}
-.hero-empty{height:456px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-style:italic;}
+.hero-empty{height:340px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);font-style:italic;background:linear-gradient(135deg,var(--navy),#1c3f7a);}
 
 .journal-list{margin-top:28px;}
-.journal-item{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line);align-items:center;}
-.journal-item img{width:64px;height:64px;object-fit:cover;border-radius:3px;flex-shrink:0;background:var(--line);}
-.journal-item .jt{font-size:15px;font-weight:500;}
+.journal-item{display:flex;gap:16px;padding:16px;border-bottom:none;align-items:center;background:var(--paper);border-radius:14px;box-shadow:0 2px 14px rgba(19,43,87,0.06);margin-bottom:12px;}
+.journal-item img{width:64px;height:64px;object-fit:cover;border-radius:10px;flex-shrink:0;background:var(--line);}
+.journal-item .jt{font-size:14.5px;font-weight:600;}
 .journal-item .jt small{display:block;color:var(--muted);font-size:12.5px;margin-top:3px;}
 .jr-controls{margin-left:auto;display:flex;gap:8px;}
 
 /* ---------- Cards / generic entries ---------- */
-.entry-card{background:var(--paper);border:1px solid var(--line);border-radius:3px;padding:20px 22px;margin-bottom:14px;position:relative;}
+.entry-card{background:var(--paper);border:none;border-radius:14px;padding:20px 22px;margin-bottom:14px;position:relative;box-shadow:0 2px 14px rgba(19,43,87,0.06);}
 .entry-card .edit-controls{position:absolute;top:14px;right:16px;display:flex;gap:10px;}
 .edit-controls button{background:none;border:none;font-size:12px;color:var(--muted);text-decoration:underline;}
 .edit-controls button.del{color:var(--red);}
-.entry-card .date-tag{font-family:var(--mono);font-size:11.5px;color:var(--gold);letter-spacing:0.5px;}
+.entry-card .date-tag{font-family:var(--mono);font-weight:700;font-size:11.5px;color:var(--gold);letter-spacing:0.5px;}
 .entry-card p{margin:6px 0 0;}
 
 /* Professor */
-.prof-photo-wrap{display:flex;gap:34px;align-items:flex-start;margin-bottom:10px;}
-.prof-photo{width:180px;height:auto;display:block;background:var(--line);border-radius:2px;border:1px solid var(--line);}
-.prof-photo-empty{width:180px;height:220px;background:var(--line);border-radius:2px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;text-align:center;}
-.prof-intro h2{font-family:var(--serif);font-size:26px;margin:0 0 6px;color:var(--navy);}
+.prof-photo-wrap{display:flex;gap:34px;align-items:flex-start;margin-bottom:10px;background:var(--paper);border-radius:16px;padding:26px;box-shadow:0 2px 14px rgba(19,43,87,0.06);}
+.prof-photo{width:180px;height:auto;display:block;background:var(--line);border-radius:12px;border:none;}
+.prof-photo-empty{width:180px;height:220px;background:var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;text-align:center;}
+.prof-intro h2{font-family:var(--serif);font-weight:800;font-size:25px;margin:0 0 6px;color:var(--ink);}
 .prof-intro p{color:var(--muted);margin:0;}
 .prof-links{display:flex;gap:10px;margin-top:12px;align-items:center;}
-.prof-link-badge{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;letter-spacing:-0.3px;transition:.15s;flex-shrink:0;}
+.prof-link-badge{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;letter-spacing:-0.3px;transition:.15s;flex-shrink:0;}
 .prof-link-badge:hover{transform:translateY(-2px);filter:brightness(1.08);}
 .prof-link-badge.linkedin{background:#0A66C2;}
 .prof-link-badge.scholar{background:#4285F4;}
@@ -113,27 +132,29 @@ main{max-width:1180px;margin:0 auto;padding:40px 24px 100px;min-height:60vh;}
 
 /* Members */
 .member-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
-.member-card{background:var(--paper);border:1px solid var(--line);border-radius:3px;overflow:hidden;position:relative;}
+.member-card{background:var(--paper);border:none;border-radius:16px;overflow:hidden;position:relative;box-shadow:0 2px 14px rgba(19,43,87,0.07);transition:.15s;}
+.member-card:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(19,43,87,0.12);}
 .member-photo{width:100%;height:auto;display:block;background:var(--line);}
 .member-photo-empty{width:100%;height:240px;background:var(--line);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;}
-.member-info{padding:14px 16px;font-size:13.5px;}
+.member-info{padding:16px 18px;font-size:13.5px;}
 .member-info .deg{font-weight:700;color:var(--navy);font-size:15px;margin-bottom:6px;}
 .member-info div{margin-bottom:4px;}
-.member-info .lbl{color:var(--gold);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:0.4px;}
+.member-info .lbl{color:var(--gold);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.4px;}
 
-.alumni-table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--paper);table-layout:fixed;}
-.alumni-table th{background:var(--navy);color:#fff;font-weight:600;padding:10px 12px;text-align:left;font-size:12px;}
-.alumni-table td{padding:10px 12px;border-bottom:1px solid var(--line);}
-.alumni-table tr:hover td{background:#fbfaf7;}
+.alumni-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px;background:var(--paper);table-layout:fixed;border-radius:14px;overflow:hidden;box-shadow:0 2px 14px rgba(19,43,87,0.06);}
+.alumni-table th{background:var(--navy);color:#fff;font-weight:700;padding:12px;text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:0.3px;}
+.alumni-table td{padding:12px;border-bottom:1px solid var(--line);}
+.alumni-table tr:hover td{background:var(--gold-soft);}
+.alumni-table tr:last-child td{border-bottom:none;}
 
 /* Research */
 .research-list{display:flex;flex-direction:column;gap:28px;}
-.research-row{display:flex;gap:24px;background:var(--paper);border:1px solid var(--line);border-radius:3px;padding:20px;position:relative;}
-.research-row .research-img-wrap{flex:0 0 60%;max-width:60%;border-radius:3px;overflow:hidden;background:var(--line);align-self:flex-start;}
+.research-row{display:flex;gap:24px;background:var(--paper);border:none;border-radius:16px;padding:22px;position:relative;box-shadow:0 2px 14px rgba(19,43,87,0.06);}
+.research-row .research-img-wrap{flex:0 0 60%;max-width:60%;border-radius:12px;overflow:hidden;background:var(--line);align-self:flex-start;}
 .research-row .research-img-wrap img{width:100%;height:auto;display:block;}
 .research-row .research-img-empty{width:100%;height:300px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;}
 .research-row .research-text{flex:1;min-width:0;}
-.research-row .research-text h4{font-family:var(--serif);font-size:19px;margin:0 0 10px;color:var(--navy);}
+.research-row .research-text h4{font-family:var(--serif);font-weight:800;font-size:18px;margin:0 0 10px;color:var(--ink);}
 .research-row .research-text p{font-size:14px;color:var(--ink);white-space:pre-wrap;margin:0;}
 @media(max-width:800px){
   .research-row{flex-direction:column;}
@@ -141,11 +162,11 @@ main{max-width:1180px;margin:0 auto;padding:40px 24px 100px;min-height:60vh;}
 }
 
 /* Publications */
-.year-head{display:flex;align-items:baseline;gap:10px;font-family:var(--serif);font-size:22px;color:var(--navy);margin:34px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line);}
-.year-head .count{font-family:var(--mono);font-size:15px;color:var(--gold);}
-.pub-item{display:flex;gap:14px;padding:16px 0;border-bottom:1px dashed var(--line);}
-.pub-num{font-family:var(--mono);font-weight:600;color:var(--muted);flex-shrink:0;width:34px;}
-.pub-image{flex:0 0 30%;max-width:30%;border-radius:3px;overflow:hidden;background:var(--line);border:1px solid var(--line);align-self:flex-start;}
+.year-head{display:flex;align-items:baseline;gap:10px;font-family:var(--serif);font-weight:800;font-size:20px;color:var(--ink);margin:34px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--navy);}
+.year-head .count{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--gold);}
+.pub-item{display:flex;gap:14px;padding:18px;border-bottom:none;background:var(--paper);border-radius:14px;box-shadow:0 2px 14px rgba(19,43,87,0.05);margin-bottom:10px;}
+.pub-num{font-family:var(--mono);font-weight:700;color:var(--gold);flex-shrink:0;width:34px;}
+.pub-image{flex:0 0 30%;max-width:30%;border-radius:10px;overflow:hidden;background:var(--line);border:none;align-self:flex-start;}
 .pub-image img{width:100%;height:auto;display:block;}
 .pub-body{flex:1;min-width:0;}
 .pub-body p{margin:0 0 4px;}
@@ -159,15 +180,15 @@ main{max-width:1180px;margin:0 auto;padding:40px 24px 100px;min-height:60vh;}
 }
 
 /* Patents */
-.patent-item{border-bottom:1px solid var(--line);padding:18px 0;}
+.patent-item{border-bottom:none;padding:18px;background:var(--paper);border-radius:14px;box-shadow:0 2px 14px rgba(19,43,87,0.05);margin-bottom:12px;}
 .patent-item p{margin:3px 0;font-size:14px;}
 .patent-num{font-family:var(--mono);font-weight:700;color:var(--gold);margin-right:6px;}
-.family-block{margin-top:10px;padding:12px 16px;background:#faf8f2;border-left:3px solid var(--gold-soft);}
+.family-block{margin-top:10px;padding:12px 16px;background:var(--gold-soft);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;}
 .family-block .flabel{font-size:11.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--gold);font-weight:700;margin-bottom:4px;}
 .filing-line{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:13.5px;color:var(--ink);padding:2px 0;}
 .filing-country{font-weight:700;color:var(--navy);min-width:44px;}
-.filing-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;background:#faf8f2;padding:8px;border-radius:2px;}
-.filing-row input{padding:7px 9px;border:1px solid var(--line);border-radius:2px;font-size:13px;font-family:var(--sans);background:#fdfcfa;}
+.filing-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;background:var(--gold-soft);padding:8px;border-radius:8px;}
+.filing-row input{padding:7px 9px;border:1px solid var(--line);border-radius:6px;font-size:13px;font-family:var(--sans);background:#fff;}
 .filing-row .fl-country{width:80px;}
 .filing-row .fl-appnum{width:150px;}
 .filing-row .fl-appdate{width:135px;}
@@ -176,60 +197,63 @@ main{max-width:1180px;margin:0 auto;padding:40px 24px 100px;min-height:60vh;}
 .filing-row button{background:none;border:none;color:var(--red);font-size:16px;}
 
 /* Presentations */
-.pres-item{padding:14px 0;border-bottom:1px solid var(--line);font-size:14.5px;}
-.pres-num{font-family:var(--mono);font-weight:700;color:var(--muted);margin-right:6px;}
-.pres-tag{font-weight:600;color:var(--navy);}
+.pres-item{padding:16px 18px;border-bottom:none;font-size:14.5px;background:var(--paper);border-radius:14px;box-shadow:0 2px 14px rgba(19,43,87,0.05);margin-bottom:10px;}
+.pres-num{font-family:var(--mono);font-weight:700;color:var(--gold);margin-right:6px;}
+.pres-tag{font-weight:700;color:var(--navy);}
 
 /* Notice */
-.notice-item{padding:18px 0;border-bottom:1px solid var(--line);}
-.notice-date{font-family:var(--mono);font-size:12px;color:var(--gold);margin-bottom:6px;}
+.notice-item{padding:18px 20px;border-bottom:none;background:var(--paper);border-radius:14px;box-shadow:0 2px 14px rgba(19,43,87,0.05);margin-bottom:12px;}
+.notice-date{font-family:var(--mono);font-weight:700;font-size:12px;color:var(--gold);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;}
 .notice-text{font-size:15px;white-space:pre-wrap;}
 .notice-photo-wrap{display:flex;justify-content:center;margin-top:14px;}
-.notice-photo{width:60%;height:auto;display:block;border-radius:3px;border:1px solid var(--line);}
+.notice-photo{width:60%;height:auto;display:block;border-radius:12px;border:none;}
 @media(max-width:800px){
   .notice-photo{width:100%;}
 }
 
 /* ---------- Modal ---------- */
-.modal-backdrop{position:fixed;inset:0;background:rgba(19,42,70,0.55);z-index:1000;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px;}
+.modal-backdrop{position:fixed;inset:0;background:rgba(15,30,60,0.6);z-index:1000;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px;}
 .modal-backdrop.show{display:flex;}
-.modal{background:#fff;border-radius:4px;max-width:640px;width:100%;padding:28px 30px 30px;}
-.modal h3{font-family:var(--serif);color:var(--navy);margin:0 0 18px;font-size:22px;}
+.modal{background:#fff;border-radius:18px;max-width:640px;width:100%;padding:28px 30px 30px;}
+.modal h3{font-family:var(--serif);font-weight:800;color:var(--ink);margin:0 0 18px;font-size:21px;}
 .field{margin-bottom:14px;}
-.field label{display:block;font-size:12.5px;font-weight:600;color:var(--navy);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.3px;}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--navy);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.3px;}
 .field input[type=text], .field input[type=date], .field input[type=number], .field textarea, .field select{
-  width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:2px;font-family:var(--sans);font-size:14px;background:#fdfcfa;
+  width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-family:var(--sans);font-size:14px;background:#fafbfc;
 }
 .field textarea{min-height:70px;resize:vertical;}
 .field-row{display:flex;gap:12px;}
 .field-row .field{flex:1;}
 .check-row{display:flex;align-items:center;gap:8px;font-size:13.5px;}
 .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px;}
-.btn-primary{background:var(--navy);color:#fff;border:none;padding:10px 22px;border-radius:2px;font-weight:600;font-size:14px;}
-.btn-secondary{background:none;border:1px solid var(--line);color:var(--muted);padding:10px 22px;border-radius:2px;font-size:14px;}
-.author-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;background:#faf8f2;padding:8px;border-radius:2px;}
+.btn-primary{background:var(--navy);color:#fff;border:none;padding:10px 24px;border-radius:20px;font-weight:700;font-size:14px;}
+.btn-primary:hover{background:var(--gold);}
+.btn-secondary{background:none;border:1.5px solid var(--line);color:var(--muted);padding:10px 22px;border-radius:20px;font-size:14px;font-weight:600;}
+.btn-secondary:hover{border-color:var(--navy);color:var(--navy);}
+.author-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;background:var(--gold-soft);padding:8px;border-radius:10px;}
 .author-row input[type=text]{flex:2;}
 .author-row select{flex:1;}
 .author-row button{background:none;border:none;color:var(--red);font-size:16px;}
 #authorList{margin-bottom:8px;}
 .small-note{font-size:12px;color:var(--muted);margin-top:4px;}
-.file-preview{margin-top:8px;max-width:150px;max-height:150px;border-radius:2px;border:1px solid var(--line);}
+.file-preview{margin-top:8px;max-width:150px;max-height:150px;border-radius:10px;border:1px solid var(--line);}
 
 /* citation preview */
-.cite-preview{background:#faf8f2;border:1px solid var(--gold-soft);border-radius:3px;padding:14px 16px;font-size:13.5px;margin-top:8px;}
+.cite-preview{background:var(--gold-soft);border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-size:13.5px;margin-top:8px;}
 .jt-italic{font-style:italic;}
 .jt-bold{font-weight:700;}
 .jt-blue{color:var(--blue);font-weight:600;}
 .jhk{font-weight:700;text-decoration:underline;}
 .jhk-corr{color:var(--red);font-weight:700;}
 
-footer.site{text-align:center;padding:26px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);background:var(--paper);}
+footer.site{position:relative;text-align:left;padding:38px 24px 26px;color:rgba(255,255,255,0.75);font-size:12.5px;border-top:none;background:#0F1A2E;border-radius:28px 28px 0 0;margin-top:50px;}
+footer.site::before{content:"";position:absolute;top:-28px;left:0;width:60px;height:28px;background:transparent;}
 
 @media(max-width:640px){
-  .brand-text .name{font-size:20px;}
+  .brand-text .name{font-size:19px;}
   .brand-text .full{display:none;}
   .prof-photo-wrap{flex-direction:column;}
-  .page-title{font-size:26px;}
+  .page-title{font-size:24px;}
   .member-grid{grid-template-columns:1fr;}
   .hero-wrap{width:100%;}
   .hero-empty, .hero-slide .no-img-placeholder{height:280px;}
@@ -244,6 +268,10 @@ footer.site{text-align:center;padding:26px;color:var(--muted);font-size:12.5px;b
 <header class="site">
   <div class="header-top">
     <div class="brand">
+      <div class="brand-logo2-wrap">
+        <div class="brand-logo2" id="brandLogo2"></div>
+        <div id="logo2EditArea"></div>
+      </div>
       <div class="brand-click" onclick="goTo('home')">
         <div class="brand-logo" id="brandLogo">BMIEL</div>
         <div class="brand-text">
@@ -263,6 +291,7 @@ footer.site{text-align:center;padding:26px;color:var(--muted);font-size:12.5px;b
   <div class="page" id="page-professor"></div>
   <div class="page" id="page-member"></div>
   <div class="page" id="page-research"></div>
+  <div class="page" id="page-research-projects"></div>
   <div class="page" id="page-publication"></div>
   <div class="page" id="page-ip"></div>
   <div class="page" id="page-presentation"></div>
@@ -302,6 +331,7 @@ const PAGES = [
   {id:'professor', label:'Professor'},
   {id:'member', label:'Member'},
   {id:'research', label:'Research'},
+  {id:'research-projects', label:'Research Projects'},
   {id:'publication', label:'Publication'},
   {id:'ip', label:'Intellectual Property'},
   {id:'presentation', label:'Presentation'},
@@ -4825,12 +4855,14 @@ const SEED_DATA = {
 
 let DB = {
   logo: '',
+  secondaryLogo: '',
   journals: [],        // home carousel {id,title,journal,image,addedAt}
   profPhoto: '',
   profLinks: {linkedin:'', scholar:'', researchgate:'', orcid:''},
   profCareer: [], profEducation: [], profAwards: [], profActivity: [],
   membersCurrent: [], membersAlumni: [],
   research: [],
+  researchProjects: [],
   publications: [],
   patents: [],
   presentations: [],
@@ -4880,11 +4912,12 @@ async function loadAll(){
   // many seconds to over a minute; running them concurrently takes roughly as
   // long as the single slowest read.
   const [
-    logo, journals, profPhoto, profLinks, profCareer, profEducation, profAwards, profActivity,
-    membersCurrent, membersAlumni, research, publications, patents, presentations,
+    logo, secondaryLogo, journals, profPhoto, profLinks, profCareer, profEducation, profAwards, profActivity,
+    membersCurrent, membersAlumni, research, researchProjects, publications, patents, presentations,
     notices, homeNotices, admins
   ] = await Promise.all([
     loadKey('bmiel-logo', ''),
+    loadKey('bmiel-secondary-logo', ''),
     loadKey('bmiel-journals', []),
     loadKey('bmiel-prof-photo', ''),
     loadKey('bmiel-prof-links', {linkedin:'', scholar:'', researchgate:'', orcid:''}),
@@ -4895,6 +4928,7 @@ async function loadAll(){
     loadKey('bmiel-members-current', []),
     loadKey('bmiel-members-alumni', []),
     loadKey('bmiel-research', []),
+    loadKey('bmiel-research-projects', []),
     loadKey('bmiel-publications', []),
     loadKey('bmiel-patents', []),
     loadKey('bmiel-presentations', []),
@@ -4902,9 +4936,9 @@ async function loadAll(){
     loadKey('bmiel-home-notices', []),
     loadKey('bmiel-admin-accounts', []),
   ]);
-  DB.logo = logo; DB.journals = journals; DB.profPhoto = profPhoto; DB.profLinks = profLinks;
+  DB.logo = logo; DB.secondaryLogo = secondaryLogo; DB.journals = journals; DB.profPhoto = profPhoto; DB.profLinks = profLinks;
   DB.profCareer = profCareer; DB.profEducation = profEducation; DB.profAwards = profAwards; DB.profActivity = profActivity;
-  DB.membersCurrent = membersCurrent; DB.membersAlumni = membersAlumni; DB.research = research;
+  DB.membersCurrent = membersCurrent; DB.membersAlumni = membersAlumni; DB.research = research; DB.researchProjects = researchProjects;
   DB.publications = publications; DB.patents = patents; DB.presentations = presentations;
   DB.notices = notices; DB.homeNotices = homeNotices; DB.admins = admins;
   await preloadImages();
@@ -4913,13 +4947,32 @@ async function loadAll(){
 /* ================= NAV / ROUTING ================= */
 function buildNav(){
   const nav = document.getElementById('mainNav');
-  nav.innerHTML = PAGES.map(p=>`<button data-page="${p.id}" onclick="goTo('${p.id}')">${p.label}</button>`).join('');
+  nav.innerHTML = PAGES.map(p=>{
+    if(p.sub){
+      return `
+        <div class="nav-item has-sub">
+          <button data-page="${p.id}" onclick="goTo('${p.id}')">${p.label}</button>
+          <div class="nav-dropdown">
+            ${p.sub.map(s=>`<button data-page="${s.id}" onclick="goTo('${s.id}')">${s.label}</button>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+    return `<div class="nav-item"><button data-page="${p.id}" onclick="goTo('${p.id}')">${p.label}</button></div>`;
+  }).join('');
 }
 function goTo(page){
   currentPage = page;
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
-  document.querySelectorAll('nav.main button').forEach(b=>b.classList.toggle('active', b.dataset.page===page));
+  document.querySelectorAll('nav.main button[data-page]').forEach(b=>b.classList.toggle('active', b.dataset.page===page));
+  // also highlight the parent nav item when a sub-page (e.g. Research Projects) is active
+  PAGES.forEach(p=>{
+    if(p.sub && p.sub.some(s=>s.id===page)){
+      const parentBtn = document.querySelector(`nav.main > .nav-item > button[data-page="${p.id}"]`);
+      if(parentBtn) parentBtn.classList.add('active');
+    }
+  });
   renderPage(page);
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -4928,6 +4981,7 @@ function renderPage(page){
   if(page==='professor') renderProfessor();
   if(page==='member') renderMember();
   if(page==='research') renderResearch();
+  if(page==='research-projects') renderResearchProjects();
   if(page==='publication') renderPublication();
   if(page==='ip') renderIP();
   if(page==='presentation') renderPresentation();
@@ -4941,6 +4995,7 @@ function renderLoginArea(){
     el.innerHTML = `<button class="login-btn" onclick="openLogin()">Login</button>`;
   }
   renderLogo();
+  renderSecondaryLogo();
 }
 function renderLogo(){
   const logoEl = document.getElementById('brandLogo');
@@ -4975,6 +5030,46 @@ async function resetLogoToDefault(){
   DB.logo = '';
   await saveKey('bmiel-logo', DB.logo);
   renderLogo();
+  closeModal();
+}
+function renderSecondaryLogo(){
+  const wrap = document.querySelector('.brand-logo2-wrap');
+  const logoEl = document.getElementById('brandLogo2');
+  const editArea = document.getElementById('logo2EditArea');
+  if(DB.secondaryLogo){
+    logoEl.innerHTML = `<img src="${imgSrc(DB.secondaryLogo)}" alt="Partner logo">`;
+  }else{
+    logoEl.innerHTML = isAdmin ? `<span style="font-size:11px;">+ Logo</span>` : '';
+  }
+  editArea.innerHTML = isAdmin ? `<button class="logo-edit-btn" onclick="openSecondaryLogoForm()">${DB.secondaryLogo?'Change':'Add'} logo</button>` : '';
+  wrap.style.display = (isAdmin || DB.secondaryLogo) ? 'flex' : 'none';
+}
+function openSecondaryLogoForm(){
+  let tempLogo = DB.secondaryLogo || null;
+  showModal('Update Additional Logo', `
+    <div class="field"><label>Logo image</label><input type="file" id="logo2File" accept="image/*">
+      ${tempLogo? `<img class="file-preview" id="logo2Preview" src="${imgSrc(tempLogo)}">`:`<img class="file-preview" id="logo2Preview" style="display:none;">`}
+    </div>
+    <p class="small-note">Shown to the left of the main BMIEL logo (e.g. a university or department logo). Displayed at the same height but can be about twice as wide.</p>
+    ${tempLogo? `<button type="button" class="btn-secondary" onclick="removeSecondaryLogo()">Remove logo</button>`:''}
+  `, async ()=>{
+    const newImg = await uploadImageAndGetURL(document.getElementById('logo2File'), 'logo');
+    if(newImg){
+      DB.secondaryLogo = newImg;
+      await saveKey('bmiel-secondary-logo', DB.secondaryLogo);
+      renderSecondaryLogo();
+    }
+    closeModal();
+  }, 'Save');
+  document.getElementById('logo2File').addEventListener('change', async e=>{
+    const d = await readFileAsDataURL(e.target);
+    if(d){ const p=document.getElementById('logo2Preview'); p.src=d; p.style.display='block'; }
+  });
+}
+async function removeSecondaryLogo(){
+  DB.secondaryLogo = '';
+  await saveKey('bmiel-secondary-logo', DB.secondaryLogo);
+  renderSecondaryLogo();
   closeModal();
 }
 function esc(s){
@@ -5070,6 +5165,7 @@ function openAccountSettings(){
 }
 const BACKUP_KEY_MAP = {
   'bmiel-logo': 'logo',
+  'bmiel-secondary-logo': 'secondaryLogo',
   'bmiel-journals': 'journals',
   'bmiel-prof-photo': 'profPhoto',
   'bmiel-prof-links': 'profLinks',
@@ -5080,6 +5176,7 @@ const BACKUP_KEY_MAP = {
   'bmiel-members-current': 'membersCurrent',
   'bmiel-members-alumni': 'membersAlumni',
   'bmiel-research': 'research',
+  'bmiel-research-projects': 'researchProjects',
   'bmiel-publications': 'publications',
   'bmiel-patents': 'patents',
   'bmiel-presentations': 'presentations',
@@ -5220,12 +5317,13 @@ function imgSrc(ref){
 function collectImageRefs(){
   const refs = new Set();
   const add = v=>{ if(typeof v==='string' && v.startsWith('img_')) refs.add(v); };
-  add(DB.logo); add(DB.profPhoto);
+  add(DB.logo); add(DB.secondaryLogo); add(DB.profPhoto);
   (DB.journals||[]).forEach(x=>add(x.image));
   (DB.notices||[]).forEach(x=>add(x.photo));
   (DB.homeNotices||[]).forEach(x=>add(x.photo));
   (DB.membersCurrent||[]).forEach(x=>add(x.photo));
   (DB.research||[]).forEach(x=>add(x.image));
+  (DB.researchProjects||[]).forEach(x=>add(x.image));
   (DB.publications||[]).forEach(x=>add(x.image));
   return Array.from(refs);
 }
@@ -5365,15 +5463,32 @@ function renderHome(){
     `).join('');
   }
   el.innerHTML = `
-    <div class="section-title">Welcome</div>
-    <h1 class="page-title">Selected Highlights</h1>
+    <div class="page-hero"><h1>Welcome</h1><p>BIOMATERIALS FOR IMMUNO-ENGINEERING LAB</p></div>
+
+    <div class="row-with-add" style="margin-top:26px;">
+      <div class="subhead" style="margin:0;">Notice</div>
+      ${isAdmin? `<button class="add-btn" onclick="openHomeNoticeForm()">+ Add notice</button>`:''}
+    </div>
+    ${(()=>{ const sorted=[...DB.homeNotices].sort((a,b)=>(b.date||'').localeCompare(a.date||'')); return sorted.length===0? `<div class="empty-note">No notices yet.</div>` : sorted.map(n=>`
+      <div class="notice-item">
+        <div class="notice-date">${fmtDot(n.date)}</div>
+        <div class="notice-text">${esc(n.text)}</div>
+        ${n.usePhoto && n.photo? `<div class="notice-photo-wrap"><img class="notice-photo" src="${imgSrc(n.photo)}"></div>`:''}
+        ${isAdmin? `<div class="edit-controls" style="position:static;margin-top:8px;">
+          <button onclick="openHomeNoticeForm('${n.id}')">Edit</button>
+          <button class="del" onclick="deleteHomeNotice('${n.id}')">Delete</button>
+        </div>`:''}
+      </div>
+    `).join(''); })()}
+
+    <div class="subhead" style="margin-top:36px;">Selected Highlights</div>
     <div class="hero-wrap">
       <div id="heroSlides">${heroHtml}</div>
       ${journals.length>0?`<div class="hero-dots" id="heroDots">${journals.slice(0,5).map((_,i)=>`<span class="${i===0?'on':''}" onclick="setHero(${i})"></span>`).join('')}</div>`:''}
     </div>
 
     <div class="row-with-add" style="margin-top:36px;">
-      <div class="subhead" style="margin:0;">Featured Journals (max 5)</div>
+      <div style="margin:0;font-weight:700;font-size:14px;color:var(--ink);">Featured Journals (max 5)</div>
       ${isAdmin? `<button class="add-btn" onclick="openJournalForm()">+ Add journal</button>`:''}
     </div>
     <div class="journal-list">
@@ -5390,36 +5505,38 @@ function renderHome(){
     </div>
 
     <div class="row-with-add" style="margin-top:36px;">
-      <div class="subhead" style="margin:0;">Notice</div>
-      ${isAdmin? `<button class="add-btn" onclick="openHomeNoticeForm()">+ Add notice</button>`:''}
-    </div>
-    ${(()=>{ const sorted=[...DB.homeNotices].sort((a,b)=>(b.date||'').localeCompare(a.date||'')); return sorted.length===0? `<div class="empty-note">No notices yet.</div>` : sorted.map(n=>`
-      <div class="notice-item">
-        <div class="notice-date">${fmtDot(n.date)}</div>
-        <div class="notice-text">${esc(n.text)}</div>
-        ${n.usePhoto && n.photo? `<div class="notice-photo-wrap"><img class="notice-photo" src="${imgSrc(n.photo)}"></div>`:''}
-        ${isAdmin? `<div class="edit-controls" style="position:static;margin-top:8px;">
-          <button onclick="openHomeNoticeForm('${n.id}')">Edit</button>
-          <button class="del" onclick="deleteHomeNotice('${n.id}')">Delete</button>
-        </div>`:''}
-      </div>
-    `).join(''); })()}
-
-    <div class="row-with-add" style="margin-top:36px;">
       <div class="subhead" style="margin:0;">Contact</div>
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);">
-      <div style="flex:1 1 320px;aspect-ratio:1/1;min-width:280px;">
+    <div style="display:flex;flex-wrap:wrap;gap:20px;background:var(--paper);border-radius:16px;box-shadow:0 2px 14px rgba(19,43,87,0.06);padding:20px;">
+      <div style="flex:1 1 320px;aspect-ratio:1/1;min-width:280px;border-radius:12px;overflow:hidden;">
         <iframe
           src="https://www.google.com/maps/d/u/0/embed?mid=10VCiE-2tl5efF6dtTODhsXXS83kPgGs&ehbc=2E312F"
           style="width:100%;height:100%;border:0;display:block;"
           allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
         </iframe>
       </div>
-      <div style="flex:1 1 320px;min-width:280px;padding:24px;display:flex;flex-direction:column;justify-content:center;">
-        <p style="margin:0 0 14px;font-size:14.5px;line-height:1.7;">84 Heukseok-ro, Dongjak-gu, Seoul, Republic of Korea (Zipcode 06974)</p>
-        <p style="margin:0 0 6px;font-size:14.5px;line-height:1.7;">Professor: 310 Bldg. 839 Rm. (jihoonkim at cau.ac.kr)</p>
-        <p style="margin:0;font-size:14.5px;line-height:1.7;">Lab: 202 Bldg. 406 Rm.</p>
+      <div style="flex:1 1 320px;min-width:280px;background:linear-gradient(135deg,var(--navy),var(--gold));border-radius:12px;padding:28px;display:flex;flex-direction:column;justify-content:center;gap:18px;">
+        <div style="display:flex;gap:14px;align-items:flex-start;">
+          <div style="width:38px;height:38px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">📍</div>
+          <div>
+            <div style="color:rgba(255,255,255,0.65);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;">Address</div>
+            <p style="margin:0;font-size:14px;line-height:1.6;color:#fff;font-weight:600;">84 Heukseok-ro, Dongjak-gu, Seoul, Republic of Korea (Zipcode 06974)</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start;">
+          <div style="width:38px;height:38px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🏫</div>
+          <div>
+            <div style="color:rgba(255,255,255,0.65);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;">Professor</div>
+            <p style="margin:0;font-size:14px;line-height:1.6;color:#fff;font-weight:600;">310 Bldg. 839 Rm. (jihoonkim at cau.ac.kr)</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start;">
+          <div style="width:38px;height:38px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">🧪</div>
+          <div>
+            <div style="color:rgba(255,255,255,0.65);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;">Lab</div>
+            <p style="margin:0;font-size:14px;line-height:1.6;color:#fff;font-weight:600;">202 Bldg. 406 Rm.</p>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -5536,6 +5653,7 @@ function renderProfessor(){
     {key:'orcid', label:'iD', cls:'orcid', title:'ORCID'},
   ];
   el.innerHTML = `
+    <div class="page-hero"><h1>Professor</h1><p>BIOMATERIALS FOR IMMUNO-ENGINEERING LAB</p></div>
     <div class="section-title">Principal Investigator</div>
     <h1 class="page-title">Professor</h1>
     <div class="prof-photo-wrap">
@@ -5684,8 +5802,7 @@ function renderMember(){
   const currentSorted = [...DB.membersCurrent].sort((a,b)=>enrollKey(a)-enrollKey(b));
   const alumniSorted = [...DB.membersAlumni].sort((a,b)=>enrollKey(a)-enrollKey(b));
   el.innerHTML = `
-    <div class="section-title">Our People</div>
-    <h1 class="page-title">Member</h1>
+    <div class="page-hero"><h1>Member</h1><p>BIOMATERIALS FOR IMMUNO-ENGINEERING LAB</p></div>
     <div class="row-with-add">
       <div class="subhead">Current</div>
       ${isAdmin? `<button class="add-btn" onclick="openCurrentMemberForm()">+ Add member</button>`:''}
@@ -6020,11 +6137,10 @@ async function deleteMember(key,id){
 function renderResearch(){
   const el = document.getElementById('page-research');
   el.innerHTML = `
-    <div class="section-title">Research Focus</div>
-    <div class="row-with-add"><h1 class="page-title" style="border:none;margin:0;padding:0;">Research</h1>
+    <div class="page-hero"><h1>Research</h1><p>BIOMATERIALS FOR IMMUNO-ENGINEERING LAB</p></div>
+    <div class="row-with-add"><div class="subhead" style="margin:0;">Topics</div>
       ${isAdmin? `<button class="add-btn" onclick="openResearchForm()">+ Add topic</button>`:''}
     </div>
-    <div style="border-bottom:2px solid var(--navy);margin-bottom:30px;"></div>
     <div class="research-list">
       ${DB.research.length===0? `<div class="empty-note">No research topics yet.</div>` : DB.research.map(r=>`
         <div class="research-row">
@@ -6081,6 +6197,85 @@ async function deleteResearch(id){
 }
 
 /* =========================================================
+   RESEARCH PROJECTS (On-going / Completed)
+   ========================================================= */
+function renderResearchProjects(){
+  const el = document.getElementById('page-research-projects');
+  const ongoing = DB.researchProjects.filter(p=>p.status!=='completed');
+  const completed = DB.researchProjects.filter(p=>p.status==='completed');
+  const card = p=>`
+    <div class="research-row">
+      <div class="research-img-wrap">
+        ${p.image? `<img src="${imgSrc(p.image)}">`:`<div class="research-img-empty">No image</div>`}
+      </div>
+      <div class="research-text">
+        <span style="display:inline-block;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:10px;${p.status==='completed'?'background:var(--line);color:var(--muted);':'background:var(--gold-soft);color:var(--gold);'}">${p.status==='completed'?'Completed':'On-going'}</span>
+        <h4>${esc(p.title)}</h4>
+        <p>${esc(p.text||'')}</p>
+        ${isAdmin? `<div class="edit-controls" style="position:static;margin-top:10px;">
+          <button onclick="openResearchProjectForm('${p.id}')">Edit</button>
+          <button class="del" onclick="deleteResearchProject('${p.id}')">Delete</button>
+        </div>`:''}
+      </div>
+    </div>
+  `;
+  el.innerHTML = `
+    <div class="page-hero"><h1>Research Projects</h1><p>BIOMATERIALS FOR IMMUNO-ENGINEERING LAB</p></div>
+    <div class="row-with-add"><div class="subhead" style="margin:0;">On-going</div>
+      ${isAdmin? `<button class="add-btn" onclick="openResearchProjectForm()">+ Add project</button>`:''}
+    </div>
+    <div class="research-list">
+      ${ongoing.length===0? `<div class="empty-note">No on-going projects yet.</div>` : ongoing.map(card).join('')}
+    </div>
+
+    <div class="subhead" style="margin-top:40px;">Completed</div>
+    <div class="research-list">
+      ${completed.length===0? `<div class="empty-note">No completed projects yet.</div>` : completed.map(card).join('')}
+    </div>
+  `;
+}
+function openResearchProjectForm(id){
+  const existing = id? DB.researchProjects.find(p=>p.id===id): null;
+  let tempImg = existing? existing.image: null;
+  showModal(existing?'Edit Research Project':'Add Research Project', `
+    <div class="field"><label>Title</label><input type="text" id="rpTitle" value="${existing?esc(existing.title):''}"></div>
+    <div class="field"><label>Status</label>
+      <select id="rpStatus">
+        <option value="ongoing" ${!existing||existing.status!=='completed'?'selected':''}>On-going</option>
+        <option value="completed" ${existing&&existing.status==='completed'?'selected':''}>Completed</option>
+      </select>
+    </div>
+    <div class="field"><label>Image</label><input type="file" id="rpImg" accept="image/*">
+      ${tempImg? `<img class="file-preview" id="rpPreview" src="${imgSrc(tempImg)}">`:`<img class="file-preview" id="rpPreview" style="display:none;">`}
+      <p class="small-note">Shown on the left, taking up about 60% of the row width.</p>
+    </div>
+    <div class="field"><label>Description</label><textarea id="rpText" style="min-height:140px;">${existing?esc(existing.text||''):''}</textarea></div>
+  `, async ()=>{
+    const title = document.getElementById('rpTitle').value.trim();
+    if(!title){ alert('Please enter a title.'); return; }
+    const status = document.getElementById('rpStatus').value;
+    const text = document.getElementById('rpText').value.trim();
+    const newImg = await uploadImageAndGetURL(document.getElementById('rpImg'), 'research-project');
+    const image = newImg || tempImg;
+    if(existing){ existing.title=title; existing.status=status; existing.image=image; existing.text=text; }
+    else{ DB.researchProjects.unshift({id:uid(), title, status, image, text, addedAt:Date.now()}); }
+    await saveKey('bmiel-research-projects', DB.researchProjects);
+    closeModal(); renderResearchProjects();
+  });
+  document.getElementById('rpImg').addEventListener('change', async e=>{
+    const d = await readFileAsDataURL(e.target);
+    if(d){ const p=document.getElementById('rpPreview'); p.src=d; p.style.display='block'; }
+  });
+}
+async function deleteResearchProject(id){
+  showConfirm('Delete this research project?', async ()=>{
+    DB.researchProjects = DB.researchProjects.filter(p=>p.id!==id);
+    await saveKey('bmiel-research-projects', DB.researchProjects);
+    renderResearchProjects();
+  });
+}
+
+/* =========================================================
    PUBLICATION
 ========================================================= */
 let currentAuthors = []; // working array while editing a publication
@@ -6119,11 +6314,10 @@ function renderPublication(){
   let nonscieBody = nonscieDisp.map(p=>renderPubItem(p)).join('');
 
   el.innerHTML = `
-    <div class="section-title">Research Output</div>
-    <div class="row-with-add"><h1 class="page-title" style="border:none;margin:0;padding:0;">Publication</h1>
+    <div class="page-hero"><h1>Publication</h1><p>BIOMATERIALS FOR IMMUNO-ENGINEERING LAB</p></div>
+    <div class="row-with-add"><div class="subhead" style="margin:0;">SCIE</div>
       ${isAdmin? `<button class="add-btn" onclick="openPublicationForm(null,'scie')">+ Add publication</button>`:''}
     </div>
-    <div style="border-bottom:2px solid var(--navy);margin-bottom:10px;"></div>
 
     <div class="row-with-add">
       <div class="year-head" style="margin:0;">In Submission</div>
@@ -6421,11 +6615,10 @@ function renderIP(){
   sortedAsc.forEach((p,i)=>p._num=i+1);
   const displayList = [...DB.patents].sort((a,b)=>earliestFilingDate(b.filings).localeCompare(earliestFilingDate(a.filings)));
   el.innerHTML = `
-    <div class="section-title">Patents</div>
-    <div class="row-with-add"><h1 class="page-title" style="border:none;margin:0;padding:0;">Intellectual Property</h1>
+    <div class="page-hero"><h1>Intellectual Property</h1><p>BIOMATERIALS FOR IMMUNO-ENGINEERING LAB</p></div>
+    <div class="row-with-add"><div class="subhead" style="margin:0;">Patents</div>
       ${isAdmin? `<button class="add-btn" onclick="openPatentForm()">+ Add patent</button>`:''}
     </div>
-    <div style="border-bottom:2px solid var(--navy);margin-bottom:10px;"></div>
     ${displayList.length===0? `<div class="empty-note">No patents yet.</div>` : displayList.map(p=>`
       <div class="patent-item">
         <p><span class="patent-num">${p._num}.</span>${esc(p.inventors)}, ${esc(p.title)}</p>
@@ -6558,8 +6751,7 @@ function renderPresentation(){
   const semDisp = [...sem].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
 
   el.innerHTML = `
-    <div class="section-title">Talks & Lectures</div>
-    <h1 class="page-title">Presentation</h1>
+    <div class="page-hero"><h1>Presentation</h1><p>BIOMATERIALS FOR IMMUNO-ENGINEERING LAB</p></div>
     <div class="row-with-add">
       <div class="subhead">Conference &amp; Symposium</div>
       ${isAdmin? `<button class="add-btn" onclick="openPresentationForm('conference')">+ Add</button>`:''}
@@ -6680,11 +6872,10 @@ function renderNotice(){
   const el = document.getElementById('page-notice');
   const sorted = [...DB.notices].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   el.innerHTML = `
-    <div class="section-title">Announcements</div>
-    <div class="row-with-add"><h1 class="page-title" style="border:none;margin:0;padding:0;">Board</h1>
+    <div class="page-hero"><h1>Board</h1><p>BIOMATERIALS FOR IMMUNO-ENGINEERING LAB</p></div>
+    <div class="row-with-add"><div class="subhead" style="margin:0;">Announcements</div>
       ${isAdmin? `<button class="add-btn" onclick="openNoticeForm()">+ Add notice</button>`:''}
     </div>
-    <div style="border-bottom:2px solid var(--navy);margin-bottom:10px;"></div>
     ${sorted.length===0? `<div class="empty-note">No notices yet.</div>` : sorted.map(n=>`
       <div class="notice-item">
         <div class="notice-date">${fmtDot(n.date)}</div>
@@ -6747,6 +6938,7 @@ async function init(){
   await ensureDefaultAdmins();
   await autoSeedOnFirstLoad();
   renderLogo();
+  renderSecondaryLogo();
   goTo('home');
 }
 async function mergeSeedDataIntoDB(){
