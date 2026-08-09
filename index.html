@@ -6296,13 +6296,25 @@ function renderPublication(){
   const subDisp = [...subPubs].sort((a,b)=> b.addedAt-a.addedAt);
   let subBody = subDisp.map(p=>renderSubPubItem(p)).join('');
 
-  // SCIE: assign ascending numbers by publication date (oldest = 1, newest = highest)
-  const scieAsc = [...sciePubs].sort((a,b)=> pubDateKey(a).localeCompare(pubDateKey(b)));
+  // SCIE: sort once (oldest -> newest) with a stable tiebreaker, assign ascending
+  // numbers (oldest = 1), then build the display by simply reversing that same
+  // array. Sorting ascending and descending SEPARATELY (as before) could disagree
+  // on how to order publications that share the exact same date, since a stable
+  // sort keeps tied items in their original array order regardless of sort
+  // direction — that mismatch is what caused numbers to appear out of sequence
+  // (e.g. ...11, 13, 12... instead of ...11, 12, 13...). Reversing guarantees the
+  // numbering and the display order can never disagree.
+  const scieAsc = [...sciePubs].sort((a,b)=>{
+    const d = pubDateKey(a).localeCompare(pubDateKey(b));
+    if(d!==0) return d;
+    return (a.addedAt||0) - (b.addedAt||0);
+  });
   scieAsc.forEach((p,i)=>p._num = i+1);
-  const years = [...new Set(sciePubs.map(p=>p.year))].sort((a,b)=>b-a);
+  const scieDesc = [...scieAsc].reverse();
+  const years = [...new Set(scieDesc.map(p=>p.year))].sort((a,b)=>b-a);
   let scieBody = '';
   years.forEach(y=>{
-    const items = sciePubs.filter(p=>p.year===y).sort((a,b)=> pubDateKey(b).localeCompare(pubDateKey(a)));
+    const items = scieDesc.filter(p=>p.year===y);
     scieBody += `<div class="year-head">${y} <span class="count">[${items.length}]</span></div>`;
     items.forEach(p=>{ scieBody += renderPubItem(p); });
   });
