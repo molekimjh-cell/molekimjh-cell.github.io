@@ -4947,7 +4947,7 @@ async function loadAll(){
 /* ================= NAV / ROUTING ================= */
 function buildNav(){
   const nav = document.getElementById('mainNav');
-  nav.innerHTML = PAGES.map(p=>{
+  nav.innerHTML = PAGES.filter(p=>p.id!=='home').map(p=>{
     if(p.sub){
       return `
         <div class="nav-item has-sub">
