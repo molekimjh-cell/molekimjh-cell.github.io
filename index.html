@@ -5052,10 +5052,88 @@ function openAccountSettings(){
     `).join('')}
 
     <div style="border-top:1px solid var(--line);margin:20px 0;"></div>
+    <h4 style="font-family:var(--serif);color:var(--navy);margin:0 0 10px;font-size:16px;">Backup site content</h4>
+    <p class="small-note">Download every piece of content on this site (Professor info, Members, Alumni, Research, Publications, Patents, Presentations, Notices, Featured Journals — including all photos) as a single file. Keep this somewhere safe.</p>
+    <button class="btn-secondary" type="button" onclick="exportAllData()">Export all content to file</button>
+
+    <div style="border-top:1px solid var(--line);margin:20px 0;"></div>
+    <h4 style="font-family:var(--serif);color:var(--navy);margin:0 0 10px;font-size:16px;">Restore site content from a backup file</h4>
+    <p class="small-note"><b>Warning:</b> this replaces ALL current content on the site (every section listed above) with what's in the file you choose. Use this after rebuilding or moving the site to bring everything back automatically. Admin login accounts are not affected.</p>
+    <input type="file" id="importDataFile" accept="application/json" style="display:none;" onchange="importAllData(this.files[0])">
+    <button class="btn-secondary" type="button" onclick="document.getElementById('importDataFile').click()">Restore from backup file…</button>
+
+    <div style="border-top:1px solid var(--line);margin:20px 0;"></div>
     <h4 style="font-family:var(--serif);color:var(--navy);margin:0 0 10px;font-size:16px;">Import content from lab website</h4>
     <p class="small-note">One-click import of Professor info, Members, Research, Publications, Patents, Presentations, and Notices from molekimjh.wixsite.com/jihoonkim. Best used once on a fresh site.</p>
     <button class="btn-secondary" type="button" onclick="importSeedData()">Import content</button>
   `, ()=>closeModal(), 'Close');
+}
+const BACKUP_KEY_MAP = {
+  'bmiel-logo': 'logo',
+  'bmiel-journals': 'journals',
+  'bmiel-prof-photo': 'profPhoto',
+  'bmiel-prof-links': 'profLinks',
+  'bmiel-prof-career': 'profCareer',
+  'bmiel-prof-education': 'profEducation',
+  'bmiel-prof-awards': 'profAwards',
+  'bmiel-prof-activity': 'profActivity',
+  'bmiel-members-current': 'membersCurrent',
+  'bmiel-members-alumni': 'membersAlumni',
+  'bmiel-research': 'research',
+  'bmiel-publications': 'publications',
+  'bmiel-patents': 'patents',
+  'bmiel-presentations': 'presentations',
+  'bmiel-notices': 'notices',
+  'bmiel-home-notices': 'homeNotices',
+};
+async function exportAllData(){
+  try{
+    const data = {};
+    Object.values(BACKUP_KEY_MAP).forEach(field=>{ data[field] = DB[field]; });
+    // Make sure every image currently referenced anywhere in the data is included,
+    // not just whatever happens to already be in memory.
+    await preloadImages();
+    const images = Object.fromEntries(imageCache);
+    const payload = { type:'bmiel-backup', version:1, exportedAt: new Date().toISOString(), data, images };
+    const blob = new Blob([JSON.stringify(payload)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0,10);
+    a.href = url; a.download = `bmiel-backup-${stamp}.json`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }catch(e){
+    console.error('export failed', e);
+    alert('Export failed. Please check your internet connection and try again.');
+  }
+}
+async function importAllData(file){
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const payload = JSON.parse(text);
+    if(!payload || payload.type!=='bmiel-backup' || !payload.data){
+      alert('This does not look like a valid BMIEL backup file.');
+      return;
+    }
+    const ok = confirm('This will replace ALL current site content with the content from this backup file. This cannot be undone. Continue?');
+    if(!ok) return;
+    // Restore images first so records that reference them resolve correctly right away.
+    const imageEntries = Object.entries(payload.images||{});
+    await Promise.all(imageEntries.map(([id, dataUrl])=>
+      fsDb.collection('bmiel_images').doc(id).set({ data: dataUrl }).then(()=> imageCache.set(id, dataUrl))
+    ));
+    // Restore each data section.
+    await Promise.all(Object.entries(BACKUP_KEY_MAP).map(([firestoreKey, field])=>{
+      if(payload.data[field]===undefined) return Promise.resolve();
+      return saveKey(firestoreKey, payload.data[field]);
+    }));
+    alert('Restore complete. The page will now reload to show the restored content.');
+    location.reload();
+  }catch(e){
+    console.error('import failed', e);
+    alert('Restore failed — the file may be corrupted, or there was a connection problem. Please try again.');
+  }
 }
 async function changeOwnPassword(){
   const current = document.getElementById('casCurrent').value;
