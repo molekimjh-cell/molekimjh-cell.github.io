@@ -90,10 +90,10 @@ main{max-width:1180px;margin:0 auto;padding:0 24px 100px;min-height:60vh;}
 
 /* ---------- Home hero ---------- */
 .hero-wrap{position:relative;border:none;background:var(--navy);width:100%;margin:0 -24px 0;border-radius:0;overflow:hidden;}
-.hero-slide{display:none;position:relative;}
+.hero-slide{display:none;position:relative;aspect-ratio:16/9;overflow:hidden;background:var(--navy);}
 .hero-slide.show{display:block;}
-.hero-slide img{width:100%;height:auto;display:block;filter:brightness(0.55);}
-.hero-slide .no-img-placeholder{width:100%;height:456px;background:linear-gradient(135deg,var(--navy),var(--gold));}
+.hero-slide img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;filter:brightness(0.55);}
+.hero-slide .no-img-placeholder{width:100%;height:100%;background:linear-gradient(135deg,var(--navy),var(--gold));}
 .hero-slide .cap{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(to top, rgba(10,20,40,0.95), rgba(10,20,40,0));color:#fff;padding:44px 32px 22px;font-family:var(--serif);font-weight:700;font-size:20px;line-height:1.4;}
 .hero-dots{display:flex;gap:8px;justify-content:center;padding:16px;background:var(--navy);}
 .hero-dots span{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.3);cursor:pointer;}
@@ -141,7 +141,8 @@ main{max-width:1180px;margin:0 auto;padding:0 24px 100px;min-height:60vh;}
 .member-info div{margin-bottom:4px;}
 .member-info .lbl{color:var(--gold);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.4px;}
 
-.alumni-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px;background:var(--paper);table-layout:fixed;border-radius:14px;overflow:hidden;box-shadow:0 2px 14px rgba(19,43,87,0.06);}
+.table-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:14px;box-shadow:0 2px 14px rgba(19,43,87,0.06);}
+.alumni-table{width:100%;min-width:760px;border-collapse:separate;border-spacing:0;font-size:13.5px;background:var(--paper);table-layout:fixed;border-radius:14px;overflow:hidden;box-shadow:none;}
 .alumni-table th{background:var(--navy);color:#fff;font-weight:700;padding:12px;text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:0.3px;}
 .alumni-table td{padding:12px;border-bottom:1px solid var(--line);}
 .alumni-table tr:hover td{background:var(--gold-soft);}
@@ -250,13 +251,26 @@ footer.site{position:relative;text-align:left;padding:38px 24px 26px;color:rgba(
 footer.site::before{content:"";position:absolute;top:-28px;left:0;width:60px;height:28px;background:transparent;}
 
 @media(max-width:640px){
-  .brand-text .name{font-size:19px;}
+  .header-top{padding:10px 14px;gap:6px 10px;flex-wrap:wrap;}
+  .brand{gap:8px;}
+  .brand-logo2-wrap{padding-right:8px;margin-right:0;}
+  .brand-logo2{height:32px;max-width:60px;}
+  .brand-logo2 img{height:32px;max-width:60px;}
+  .brand-click{gap:8px;}
+  .brand-logo{width:32px;height:32px;font-size:9px;border-radius:8px;}
+  .brand-logo.has-image img{height:32px;}
+  .brand-text .name{font-size:15px;}
   .brand-text .full{display:none;}
+  .login-btn{padding:6px 12px;font-size:11.5px;}
+  .admin-pill{font-size:11px;gap:6px;flex-wrap:wrap;}
   .prof-photo-wrap{flex-direction:column;}
   .page-title{font-size:24px;}
   .member-grid{grid-template-columns:1fr;}
   .hero-wrap{width:100%;}
-  .hero-empty, .hero-slide .no-img-placeholder{height:280px;}
+  .hero-empty{height:220px;}
+}
+@media(max-width:380px){
+  .brand-logo2-wrap{display:none;}
 }
 @media(min-width:641px) and (max-width:900px){
   .member-grid{grid-template-columns:repeat(2,1fr);}
@@ -5856,6 +5870,7 @@ function renderMember(){
       ${isAdmin? `<button class="add-btn" onclick="openAlumniForm()">+ Add alumnus/alumna</button>`:''}
     </div>
     ${alumniSorted.length===0? `<div class="empty-note">No alumni listed.</div>` : `
+    <div class="table-scroll">
     <table class="alumni-table">
       <colgroup>
         <col style="width:20%;">
@@ -5887,7 +5902,8 @@ function renderMember(){
           </tr>
         `).join('')}
       </tbody>
-    </table>`}
+    </table>
+    </div>`}
   `;
 }
 function openCurrentMemberForm(id){
