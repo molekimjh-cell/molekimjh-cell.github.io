@@ -5815,6 +5815,35 @@ function alumniDegreeLines(a){
   }
   return parts.join('<br>');
 }
+function pubConfSectionHtml(m, kind){
+  const linkedPubs = getMemberPubLinks(m)
+    .map(link=>({...link, pub:DB.publications.find(p=>p.id===link.pubId)}))
+    .filter(link=>link.pub)
+    .sort((a,b)=> pubSortValue(b.pub).localeCompare(pubSortValue(a.pub)));
+  const confs = [...(m.conferences||[])].sort((a,b)=> memberConfSortValue(b).localeCompare(memberConfSortValue(a)));
+  return `
+    <div style="margin-top:4px;"><span class="lbl">Publication</span></div>
+    ${linkedPubs.length===0? `<div class="small-note" style="margin:2px 0 4px;">None linked yet.</div>` : linkedPubs.map(link=>{ const p=link.pub; return `
+      <div style="font-size:12.5px;margin:5px 0;padding-bottom:5px;border-bottom:1px dotted var(--line);">
+        <span style="font-weight:600;">${link.role?`(${esc(memberRoleLabel(link.role))}) `:''}${pubTitleHtml(p)}</span><br>
+        <span class="jt-italic">${esc(p.journal)}</span>, <span class="jt-bold">${p.year}</span>${p.pubDate?', '+esc(p.pubDate):''}
+        ${isAdmin? ` <button style="border:none;background:none;color:var(--red);font-size:11px;text-decoration:underline;" onclick="remove${kind}Publication('${m.id}','${p.id}')">remove</button>`:''}
+      </div>
+    `;}).join('')}
+    ${isAdmin? `<button class="add-btn" style="margin:4px 0 2px;background:none;color:var(--navy);border:1px solid var(--line);font-size:12px;padding:5px 10px;" onclick="open${kind}PubPicker('${m.id}')">+ Link publication</button>`:''}
+
+    <div style="margin-top:14px;"><span class="lbl">Conference &amp; Symposium</span></div>
+    ${confs.length===0? `<div class="small-note" style="margin:2px 0 4px;">None yet.</div>` : confs.map(c=>`
+      <div style="font-size:12.5px;margin:5px 0;padding-bottom:5px;border-bottom:1px dotted var(--line);">
+        (${esc(c.mode)}, ${esc(c.lang)}) ${esc(c.title)}, ${esc(c.confName)}, ${esc(c.city)}, ${esc(c.country)}, ${esc(c.period)}${c.presentDate?` (Presented: ${esc(fmtDot(c.presentDate))})`:''}.
+        ${c.hasAward && c.awardName? `<br><b>${esc(c.awardName)}</b>`:''}
+        ${isAdmin? `<br><button style="border:none;background:none;color:var(--muted);font-size:11px;text-decoration:underline;" onclick="open${kind}ConferenceForm('${m.id}','${c.id}')">edit</button> <button style="border:none;background:none;color:var(--red);font-size:11px;text-decoration:underline;" onclick="delete${kind}Conference('${m.id}','${c.id}')">delete</button>`:''}
+      </div>
+    `).join('')}
+    ${isAdmin? `<button class="add-btn" style="margin:4px 0 10px;background:none;color:var(--navy);border:1px solid var(--line);font-size:12px;padding:5px 10px;" onclick="open${kind}ConferenceForm('${m.id}')">+ Add conference</button>`:''}
+  `;
+}
+
 function renderMember(){
   const el = document.getElementById('page-member');
   const currentSorted = [...DB.membersCurrent].sort((a,b)=>enrollKey(a)-enrollKey(b));
@@ -5827,11 +5856,6 @@ function renderMember(){
     </div>
     <div class="member-grid">
       ${currentSorted.length===0? `<div class="empty-note">No current members listed.</div>` : currentSorted.map(m=>{
-        const linkedPubs = getMemberPubLinks(m)
-          .map(link=>({...link, pub:DB.publications.find(p=>p.id===link.pubId)}))
-          .filter(link=>link.pub)
-          .sort((a,b)=> pubSortValue(b.pub).localeCompare(pubSortValue(a.pub)));
-        const confs = [...(m.conferences||[])].sort((a,b)=> memberConfSortValue(b).localeCompare(memberConfSortValue(a)));
         return `
         <div class="member-card">
           ${m.photo? `<img class="member-photo" src="${imgSrc(m.photo)}">`:`<div class="member-photo-empty">No photo</div>`}
@@ -5840,25 +5864,7 @@ function renderMember(){
             <div class="deg" style="font-size:13px;font-weight:600;color:var(--muted);">${esc(m.degree)}${m.enrollYear? ` <span style="color:var(--gold);font-weight:600;font-size:12.5px;">(${m.enrollYear}${m.enrollMonth?'.'+String(m.enrollMonth).padStart(2,'0'):''})</span>`:''}${m.hasIntern && m.internPost ? `<br>Post-undergraduate Intern${m.internPostText? ': '+esc(m.internPostText):''}`:''}${m.hasIntern && m.internUndergrad ? `<br>Undergraduate Intern${m.internUndergradText? ': '+esc(m.internUndergradText):''}`:''}</div>
             <div><span class="lbl">Research area</span> ${esc(m.researchArea)}</div>
 
-            <div style="margin-top:12px;"><span class="lbl">Publication</span></div>
-            ${linkedPubs.length===0? `<div class="small-note" style="margin:2px 0 4px;">None linked yet.</div>` : linkedPubs.map(link=>{ const p=link.pub; return `
-              <div style="font-size:12.5px;margin:5px 0;padding-bottom:5px;border-bottom:1px dotted var(--line);">
-                <span style="font-weight:600;">${link.role?`(${esc(memberRoleLabel(link.role))}) `:''}${pubTitleHtml(p)}</span><br>
-                <span class="jt-italic">${esc(p.journal)}</span>, <span class="jt-bold">${p.year}</span>${p.pubDate?', '+esc(p.pubDate):''}
-                ${isAdmin? ` <button style="border:none;background:none;color:var(--red);font-size:11px;text-decoration:underline;" onclick="removeMemberPublication('${m.id}','${p.id}')">remove</button>`:''}
-              </div>
-            `;}).join('')}
-            ${isAdmin? `<button class="add-btn" style="margin:4px 0 2px;background:none;color:var(--navy);border:1px solid var(--line);font-size:12px;padding:5px 10px;" onclick="openMemberPubPicker('${m.id}')">+ Link publication</button>`:''}
-
-            <div style="margin-top:14px;"><span class="lbl">Conference &amp; Symposium</span></div>
-            ${confs.length===0? `<div class="small-note" style="margin:2px 0 4px;">None yet.</div>` : confs.map(c=>`
-              <div style="font-size:12.5px;margin:5px 0;padding-bottom:5px;border-bottom:1px dotted var(--line);">
-                (${esc(c.mode)}, ${esc(c.lang)}) ${esc(c.title)}, ${esc(c.confName)}, ${esc(c.city)}, ${esc(c.country)}, ${esc(c.period)}${c.presentDate?` (Presented: ${esc(fmtDot(c.presentDate))})`:''}.
-                ${c.hasAward && c.awardName? `<br><b>${esc(c.awardName)}</b>`:''}
-                ${isAdmin? `<br><button style="border:none;background:none;color:var(--muted);font-size:11px;text-decoration:underline;" onclick="openMemberConferenceForm('${m.id}','${c.id}')">edit</button> <button style="border:none;background:none;color:var(--red);font-size:11px;text-decoration:underline;" onclick="deleteMemberConference('${m.id}','${c.id}')">delete</button>`:''}
-              </div>
-            `).join('')}
-            ${isAdmin? `<button class="add-btn" style="margin:4px 0 10px;background:none;color:var(--navy);border:1px solid var(--line);font-size:12px;padding:5px 10px;" onclick="openMemberConferenceForm('${m.id}')">+ Add conference</button>`:''}
+            ${pubConfSectionHtml(m, 'Member')}
 
             ${isAdmin? `<div class="edit-controls" style="position:static;margin-top:10px;">
               <button onclick="openCurrentMemberForm('${m.id}')">Edit info</button>
@@ -5897,7 +5903,7 @@ function renderMember(){
       <tbody>
         ${alumniSorted.map(a=>`
           <tr>
-            <td style="white-space:nowrap;">${esc(a.name||'')}</td>
+            <td style="white-space:nowrap;"><button onclick="openAlumniDetail('${a.id}')" style="border:none;background:none;color:var(--navy);font-weight:700;text-decoration:underline;cursor:pointer;padding:0;font-size:inherit;font-family:inherit;">${esc(a.name||'')}</button></td>
             <td>${a.enrollYear?esc(a.enrollYear)+(a.enrollMonth?'.'+String(a.enrollMonth).padStart(2,'0'):''):''}</td>
             <td>${alumniDegreeLines(a)}</td>
             <td>${esc(a.domJ1)}</td><td>${esc(a.domJCo)}</td>
@@ -6068,6 +6074,125 @@ async function deleteMemberConference(memberId, confId){
     member.conferences = (member.conferences||[]).filter(c=>c.id!==confId);
     await saveKey('bmiel-members-current', DB.membersCurrent);
     renderMember();
+  });
+}
+
+/* =========================================================
+   ALUMNI DETAIL (publications + conferences), same pattern as Current Members
+   ========================================================= */
+function openAlumniDetail(alumniId){
+  const m = DB.membersAlumni.find(a=>a.id===alumniId);
+  if(!m) return;
+  showModal(m.name? esc(m.name) : 'Alumni', `
+    <div class="small-note" style="margin-bottom:10px;">${alumniDegreeLines(m)}</div>
+    ${pubConfSectionHtml(m, 'Alumni')}
+  `, ()=>closeModal(), 'Close');
+}
+function openAlumniPubPicker(alumniId){
+  const member = DB.membersAlumni.find(m=>m.id===alumniId);
+  if(!member) return;
+  const existingLinks = getMemberPubLinks(member);
+  const allPubsSorted = [...DB.publications].filter(p=>p.category!=='insubmission').sort((a,b)=> pubSortValue(b).localeCompare(pubSortValue(a)));
+  if(allPubsSorted.length===0){
+    showModal('Link Publication', `<p class="small-note">No publications exist yet. Add publications first from the Publication menu, then come back here to link them.</p>`, ()=>closeModal(), 'Close');
+    return;
+  }
+  showModal('Link Publication(s)', `
+    <p class="small-note">Check a publication to link it, then choose this person's role on that paper.</p>
+    <div class="field" style="max-height:340px;overflow-y:auto;">
+      ${allPubsSorted.map(p=>{
+        const link = existingLinks.find(l=>l.pubId===p.id);
+        return `
+        <div class="check-row" style="margin-bottom:8px;align-items:flex-start;flex-wrap:wrap;">
+          <input type="checkbox" class="pub-pick" value="${p.id}" ${link?'checked':''} onchange="document.getElementById('pub-role-${p.id}').style.display=this.checked?'inline-block':'none'">
+          <label style="margin:0;text-transform:none;font-weight:400;font-size:13px;">${esc(p.title)} — <span class="jt-italic">${esc(p.journal)}</span>, ${p.year}${p.pubDate?', '+esc(p.pubDate):''}</label>
+          <select id="pub-role-${p.id}" class="pub-role-select" data-pubid="${p.id}" style="margin-left:26px;display:${link?'inline-block':'none'};">
+            <option value="first" ${link&&link.role==='first'?'selected':''}>1st Author</option>
+            <option value="co" ${!link||link.role==='co'?'selected':''}>Co-author</option>
+            <option value="corr" ${link&&link.role==='corr'?'selected':''}>Corresponding Author</option>
+          </select>
+        </div>
+      `;}).join('')}
+    </div>
+  `, async ()=>{
+    const checked = Array.from(document.querySelectorAll('.pub-pick:checked'));
+    member.pubLinks = checked.map(c=>({
+      pubId: c.value,
+      role: document.getElementById('pub-role-'+c.value).value,
+    }));
+    await saveKey('bmiel-members-alumni', DB.membersAlumni);
+    closeModal();
+    openAlumniDetail(alumniId);
+  }, 'Save links');
+}
+async function removeAlumniPublication(alumniId, pubId){
+  const member = DB.membersAlumni.find(m=>m.id===alumniId);
+  if(!member) return;
+  member.pubLinks = getMemberPubLinks(member).filter(l=>l.pubId!==pubId);
+  await saveKey('bmiel-members-alumni', DB.membersAlumni);
+  openAlumniDetail(alumniId);
+}
+function openAlumniConferenceForm(alumniId, confId){
+  const member = DB.membersAlumni.find(m=>m.id===alumniId);
+  if(!member) return;
+  if(!member.conferences) member.conferences = [];
+  const existing = confId? member.conferences.find(c=>c.id===confId): null;
+  const f = existing || {};
+  showModal(existing?'Edit Conference / Symposium':'Add Conference / Symposium', `
+    <div class="field-row">
+      <div class="field"><label>Mode</label><select id="mcMode">
+        <option value="Oral" ${f.mode==='Oral'?'selected':''}>Oral</option>
+        <option value="Poster" ${f.mode==='Poster'?'selected':''}>Poster</option>
+      </select></div>
+      <div class="field"><label>Language</label><select id="mcLang">
+        <option value="English" ${f.lang==='English'?'selected':''}>English</option>
+        <option value="Korean" ${f.lang==='Korean'?'selected':''}>Korean</option>
+      </select></div>
+    </div>
+    <div class="field"><label>Presentation Title</label><textarea id="mcTitle">${esc(f.title||'')}</textarea></div>
+    <div class="field"><label>Conference Name</label><input type="text" id="mcConfName" value="${esc(f.confName||'')}"></div>
+    <div class="field-row">
+      <div class="field"><label>City</label><input type="text" id="mcCity" value="${esc(f.city||'')}"></div>
+      <div class="field"><label>Country</label><input type="text" id="mcCountry" value="${esc(f.country||'')}"></div>
+    </div>
+    <div class="field"><label>Period (as displayed)</label><input type="text" id="mcPeriod" value="${esc(f.period||'')}" placeholder="Apr. 02-04, 2025"></div>
+    <div class="field"><label>Actual Presentation Date</label><input type="date" id="mcPresentDate" value="${f.presentDate||f.sortDate||''}"></div>
+    <div class="check-row"><input type="checkbox" id="mcHasAward" ${f.hasAward?'checked':''} onchange="document.getElementById('mcAwardField').style.display=this.checked?'block':'none'"> <label for="mcHasAward" style="margin:0;text-transform:none;font-weight:400;">Received an award for this presentation</label></div>
+    <div class="field" id="mcAwardField" style="display:${f.hasAward?'block':'none'};margin-top:10px;">
+      <label>Award Name</label><input type="text" id="mcAwardName" value="${esc(f.awardName||'')}" placeholder="e.g. Best Poster Award">
+    </div>
+  `, async ()=>{
+    const title = document.getElementById('mcTitle').value.trim();
+    if(!title){ alert('Please enter a title.'); return; }
+    const hasAward = document.getElementById('mcHasAward').checked;
+    const data = {
+      mode: document.getElementById('mcMode').value,
+      lang: document.getElementById('mcLang').value,
+      title,
+      confName: document.getElementById('mcConfName').value.trim(),
+      city: document.getElementById('mcCity').value.trim(),
+      country: document.getElementById('mcCountry').value.trim(),
+      period: document.getElementById('mcPeriod').value.trim(),
+      presentDate: document.getElementById('mcPresentDate').value,
+      sortDate: document.getElementById('mcPresentDate').value,
+      hasAward,
+      awardName: hasAward? document.getElementById('mcAwardName').value.trim() : '',
+    };
+    if(existing){ Object.assign(existing, data); }
+    else{ member.conferences.unshift({id:uid(), ...data, addedAt:Date.now()}); }
+    await saveKey('bmiel-members-alumni', DB.membersAlumni);
+    closeModal();
+    openAlumniDetail(alumniId);
+  });
+}
+async function deleteAlumniConference(alumniId, confId){
+  showConfirm('Delete this conference entry?', async ()=>{
+    const member = DB.membersAlumni.find(m=>m.id===alumniId);
+    if(!member) return;
+    member.conferences = (member.conferences||[]).filter(c=>c.id!==confId);
+    await saveKey('bmiel-members-alumni', DB.membersAlumni);
+    closeModal();
+    openAlumniDetail(alumniId);
   });
 }
 function openAlumniForm(id){
